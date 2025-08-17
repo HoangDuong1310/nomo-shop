@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán thành công #{{orderNumber}}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .header .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        
+        .payment-summary {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .payment-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
+            margin: 10px 0;
+        }
+        
+        .payment-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #d1d5db;
+        }
+        
+        .payment-info:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .payment-info span:first-child {
+            color: #6b7280;
+        }
+        
+        .payment-info span:last-child {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .success-message {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .success-message h3 {
+            margin: 0 0 12px;
+            color: #166534;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .success-message p {
+            margin: 0;
+            color: #166534;
+            line-height: 1.6;
+        }
+        
+        .next-steps {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .next-steps h3 {
+            margin: 0 0 12px;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #1e40af;
+        }
+        
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        
+        .button {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background: #059669;
+        }
+        
+        .button-center {
+            text-align: center;
+        }
+        
+        .invoice-info {
+            background-color: #fefce8;
+            border: 1px solid #fde68a;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .invoice-info h3 {
+            margin: 0 0 8px;
+            color: #a16207;
+            font-size: 16px;
+        }
+        
+        .invoice-info p {
+            margin: 4px 0;
+            color: #a16207;
+        }
+        
+        .contact-info {
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .contact-info h3 {
+            margin: 0 0 8px;
+            color: #374151;
+            font-size: 16px;
+        }
+        
+        .contact-info p {
+            margin: 4px 0;
+            color: #6b7280;
+        }
+        
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .footer .company-info {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 4px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .payment-info {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+            
+            .payment-amount {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="success-icon">💳</div>
+            <h1>Thanh toán thành công!</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Xin chào <strong>{{customerName}}</strong>,
+            </div>
+            
+            <div class="success-message">
+                <h3>✅ Chúc mừng! Thanh toán của bạn đã được xử lý thành công</h3>
+                <p>Giao dịch đã hoàn tất an toàn và đơn hàng của bạn đang được chuẩn bị để giao.</p>
+            </div>
+            
+            <div class="payment-summary">
+                <h2 style="margin: 0 0 20px; color: #166534;">Thông tin thanh toán</h2>
+                
+                <div class="payment-info">
+                    <span>Mã đơn hàng:</span>
+                    <span>#{{orderNumber}}</span>
+                </div>
+                
+                <div class="payment-info">
+                    <span>Ngày thanh toán:</span>
+                    <span>{{paymentDate}}</span>
+                </div>
+                
+                <div class="payment-info">
+                    <span>Phương thức thanh toán:</span>
+                    <span>VNPay</span>
+                </div>
+                
+                <div class="payment-info">
+                    <span>Trạng thái:</span>
+                    <span style="color: #10b981;">Thành công</span>
+                </div>
+                
+                <div class="payment-amount">{{orderTotal}}</div>
+            </div>
+            
+            <div class="next-steps">
+                <h3>📦 Bước tiếp theo</h3>
+                <ul>
+                    <li>Đơn hàng của bạn sẽ được <strong>chuẩn bị và đóng gói</strong></li>
+                    <li>Chúng tôi sẽ gửi thông báo khi đơn hàng được <strong>gửi đi</strong></li>
+                    <li>Thời gian giao hàng dự kiến: <strong>2-3 ngày làm việc</strong></li>
+                    <li>Bạn có thể theo dõi trạng thái đơn hàng trực tuyến</li>
+                </ul>
+            </div>
+            
+            <div class="button-center">
+                <a href="{{trackOrderUrl}}" class="button">
+                    📱 Theo dõi đơn hàng
+                </a>
+            </div>
+            
+            <div class="invoice-info">
+                <h3>📄 Hóa đơn điện tử</h3>
+                <p>Hóa đơn điện tử sẽ được gửi đến email này trong vòng 24 giờ.</p>
+                <p>Nếu bạn cần hóa đơn với thông tin cụ thể, vui lòng liên hệ với chúng tôi.</p>
+            </div>
+            
+            <div class="contact-info">
+                <h3>💬 Cần hỗ trợ?</h3>
+                <p><strong>Email:</strong> support@cloudshop.com</p>
+                <p><strong>Hotline:</strong> (028) 1234 5678</p>
+                <p>Thời gian hỗ trợ: 8:00 - 22:00 hàng ngày</p>
+            </div>
+            
+            <p style="text-align: center; margin-top: 30px; color: #6b7280;">
+                Cảm ơn bạn đã tin tưởng và lựa chọn <strong>Cloud Shop</strong>! 🙏
+            </p>
+        </div>
+        
+        <div class="footer">
+            <div class="company-info">☁️ Cloud Shop</div>
+            <p>📍 123 Đường ABC, Quận XYZ, TP.HCM</p>
+            <p>📞 Hotline: (028) 1234 5678 | ✉️ Email: support@cloudshop.com</p>
+            
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+            
+            <p style="font-size: 12px; color: #9ca3af;">
+                Giao dịch được bảo mật bởi VNPay và Cloud Shop.<br>
+                Email này được gửi tự động, vui lòng không trả lời trực tiếp.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

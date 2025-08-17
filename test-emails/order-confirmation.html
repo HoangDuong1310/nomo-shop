@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng #12345ABC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .header .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        
+        .order-summary {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .order-header {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 10px;
+        }
+        
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .order-info span:first-child {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .order-info span:last-child {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .items-table th {
+            background-color: #10b981;
+            color: white;
+            font-weight: 600;
+            padding: 15px 12px;
+            text-align: left;
+        }
+        
+        .items-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .items-table tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        .total-row {
+            background-color: #f3f4f6;
+            font-weight: 700;
+            font-size: 16px;
+            color: #1f2937;
+        }
+        
+        .total-row td:last-child {
+            color: #10b981;
+            font-size: 18px;
+        }
+        
+        .shipping-info {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .shipping-info h3 {
+            margin: 0 0 8px;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        
+        .shipping-info p {
+            margin: 0;
+            color: #1f2937;
+        }
+        
+        .button {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background: #059669;
+        }
+        
+        .button-center {
+            text-align: center;
+        }
+        
+        .next-steps {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .next-steps h3 {
+            margin: 0 0 12px;
+            color: #166534;
+            font-size: 16px;
+        }
+        
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #166534;
+        }
+        
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        
+        .contact-info {
+            background-color: #fefce8;
+            border: 1px solid #fde68a;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .contact-info h3 {
+            margin: 0 0 8px;
+            color: #a16207;
+            font-size: 16px;
+        }
+        
+        .contact-info p {
+            margin: 4px 0;
+            color: #a16207;
+        }
+        
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .footer .company-info {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 4px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .order-info {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .items-table {
+                font-size: 14px;
+            }
+            
+            .items-table th,
+            .items-table td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>Đơn hàng thành công!</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Xin chào <strong>Nguyễn Văn Test</strong>,
+            </div>
+            
+            <p>Cảm ơn bạn đã đặt hàng tại <strong>Cloud Shop</strong>! Chúng tôi đã nhận được đơn hàng của bạn và sẽ xử lý trong thời gian sớm nhất.</p>
+            
+            <div class="order-summary">
+                <div class="order-header">
+                    📦 Thông tin đơn hàng #12345ABC
+                </div>
+                
+                <div class="order-info">
+                    <span>Mã đơn hàng:</span>
+                    <span>#12345ABC</span>
+                </div>
+                
+                <div class="order-info">
+                    <span>Ngày đặt hàng:</span>
+                    <span>16/8/2025</span>
+                </div>
+                
+                <div class="order-info">
+                    <span>Trạng thái:</span>
+                    <span style="color: #f59e0b; font-weight: 700;">Chờ xác nhận</span>
+                </div>
+            </div>
+            
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style="text-align: center;">Số lượng</th>
+                        <th style="text-align: right;">Đơn giá</th>
+                        <th style="text-align: right;">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>iPhone 15 Pro Max</strong>
+                        </td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right;">29990000đ</td>
+                        <td style="text-align: right;"><strong>29990000đ</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Ốp lưng Silicon</strong>
+                        </td>
+                        <td style="text-align: center;">2</td>
+                        <td style="text-align: right;">299000đ</td>
+                        <td style="text-align: right;"><strong>598000đ</strong></td>
+                    </tr>
+                    
+                    <tr class="total-row">
+                        <td colspan="3"><strong>Tổng cộng:</strong></td>
+                        <td style="text-align: right;"><strong>30.588.000 ₫</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="shipping-info">
+                <h3>📍 Địa chỉ giao hàng</h3>
+                <p>123 Nguyễn Văn Cừ, Quận 5, TP.HCM</p>
+                <br>
+                <h3>📝 Ghi chú</h3>
+                <p>Giao hàng ngoài giờ hành chính</p>
+            </div>
+            
+            <div class="next-steps">
+                <h3>🚀 Các bước tiếp theo</h3>
+                <ul>
+                    <li>Chúng tôi sẽ xác nhận đơn hàng trong vòng <strong>2 giờ</strong></li>
+                    <li>Đơn hàng sẽ được chuẩn bị và đóng gói</li>
+                    <li>Bạn sẽ nhận được thông tin vận chuyển qua email</li>
+                    <li>Thời gian giao hàng dự kiến: <strong>2-3 ngày làm việc</strong></li>
+                </ul>
+            </div>
+            
+            <div class="button-center">
+                <a href="http://localhost:3000/account/orders/12345ABC" class="button">
+                    🔍 Theo dõi đơn hàng
+                </a>
+            </div>
+            
+            <div class="contact-info">
+                <h3>💬 Cần hỗ trợ?</h3>
+                <p><strong>Email:</strong> support@cloudshop.com</p>
+                <p><strong>Hotline:</strong> (028) 1234 5678</p>
+                <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn!</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="company-info">☁️ Cloud Shop</div>
+            <p>📍 123 Đường ABC, Quận XYZ, TP.HCM</p>
+            <p>📞 Hotline: (028) 1234 5678 | ✉️ Email: support@cloudshop.com</p>
+            
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+            
+            <p style="font-size: 12px; color: #9ca3af;">
+                Cảm ơn bạn đã tin tưởng và mua sắm tại Cloud Shop.<br>
+                Email này được gửi tự động, vui lòng không trả lời trực tiếp email này.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cửa hàng đã mở cửa trở lại!</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 40px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
+        .content { padding: 40px 30px; }
+        .highlight { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff; padding: 20px; border-radius: 10px; text-align: center; margin: 30px 0; }
+        .cta { text-align: center; margin: 30px 0; }
+        .btn { display: inline-block; background: #667eea; color: #fff; padding: 15px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; margin: 10px; transition: all 0.3s ease; }
+        .btn:hover { background: #5a6fd8; transform: translateY(-2px); }
+        .hours { background: #f8f9ff; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; }
+        .footer { background: #333; color: #fff; padding: 20px; text-align: center; font-size: 14px; }
+        .unsubscribe { color: #999; font-size: 12px; margin-top: 20px; }
+        .unsubscribe a { color: #667eea; }
+        @media (max-width: 600px) { .content { padding: 30px 20px; } .btn { display: block; margin: 10px 0; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 Cloud Shop</h1>
+            <p style="margin: 10px 0 0; font-size: 18px; opacity: 0.9;">Cửa hàng đã mở cửa trở lại!</p>
+        </div>
+        
+        <div class="content">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+                <h2 style="color: #333; margin: 0;">Chào mừng bạn quay trở lại!</h2>
+                <p style="font-size: 18px; color: #666; margin: 15px 0;">
+                    Cửa hàng Cloud Shop đã mở cửa trở lại và sẵn sàng phục vụ bạn.
+                </p>
+            </div>
+
+            <div class="highlight">
+                <h3 style="margin: 0 0 15px; font-size: 22px;">✨ Đặt hàng ngay hôm nay!</h3>
+                <p style="margin: 0; font-size: 16px; opacity: 0.9;">
+                    Khám phá menu mới với nhiều món ăn hấp dẫn và ưu đãi đặc biệt.
+                </p>
+            </div>
+
+            <div class="hours">
+                <h4 style="margin: 0 0 15px; color: #333;">⏰ Giờ hoạt động:</h4>
+                <p style="margin: 0; font-size: 16px;">
+                    <strong>Thứ 2 - Chủ nhật:</strong> {{operatingHours}}<br>
+                    <em style="color: #666;">Chúng tôi luôn sẵn sàng phục vụ bạn trong giờ hoạt động!</em>
+                </p>
+            </div>
+
+            <div class="cta">
+                <a href="{{websiteUrl}}" class="btn">🛍️ Xem Menu</a>
+                <a href="{{websiteUrl}}/menu" class="btn">🍽️ Đặt Hàng Ngay</a>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 30px 0;">
+                <h4 style="margin: 0 0 15px; color: #333;">📞 Liên hệ:</h4>
+                <p style="margin: 5px 0;"><strong>Điện thoại:</strong> {{phone}}</p>
+                <p style="margin: 5px 0;"><strong>Địa chỉ:</strong> {{address}}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> {{email}}</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0; padding: 20px; background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); border-radius: 10px;">
+                <h4 style="margin: 0 0 10px; color: #333;">🎁 Ưu đãi đặc biệt</h4>
+                <p style="margin: 0; color: #555;">
+                    Giảm giá <strong>10%</strong> cho đơn hàng đầu tiên trong tuần này!<br>
+                    <small>Áp dụng cho đơn hàng từ 200.000đ</small>
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p style="margin: 0 0 10px;"><strong>Cloud Shop</strong></p>
+            <p style="margin: 0 0 20px;">Cảm ơn bạn đã tin tưởng và đồng hành cùng chúng tôi!</p>
+            
+            <div class="unsubscribe">
+                <p>Bạn nhận được email này vì đã đăng ký nhận thông báo khi cửa hàng mở lại.</p>
+                <p><a href="{{unsubscribeUrl}}">Hủy đăng ký</a> | <a href="{{websiteUrl}}">Truy cập website</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

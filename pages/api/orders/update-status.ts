@@ -1,0 +1,113 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { executeQuery } from '../../../lib/db';
+import { verifyToken } from '../../../lib/auth';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Chỉ chấp nhận phương thức PUT
+  if (req.method !== 'PUT') {
+    return res.status(405).json({ success: false, message: 'Method not allowed' });
+  }
+
+  try {
+    // Lấy token từ cookie
+    const token = req.cookies.auth_token;
+    
+    // Nếu không có token
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Bạn chưa đăng nhập'
+      });
+    }
+    
+    // Verify token
+    const decodedToken = verifyToken(token);
+    
+    if (!decodedToken || !decodedToken.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Phiên đăng nhập không hợp lệ'
+      });
+    }
+
+    // Kiểm tra xem người dùng có quyền admin không
+    const userResult = await executeQuery({
+      query: 'SELECT role FROM users WHERE id = ?',
+      values: [decodedToken.id],
+    });
+
+    const userRole = (userResult as any[])[0]?.role;
+    
+    if (!userRole || userRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền thực hiện hành động này'
+      });
+    }
+
+    const { orderId, orderStatus, paymentStatus } = req.body;
+
+    if (!orderId || (!orderStatus && !paymentStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thiếu thông tin cập nhật'
+      });
+    }
+
+    // Xây dựng câu truy vấn cập nhật
+    let query = 'UPDATE orders SET ';
+    const values: any[] = [];
+    const updates: string[] = [];
+
+    if (orderStatus) {
+      const validOrderStatuses = ['pending', 'confirmed', 'processing', 'shipping', 'completed', 'cancelled'];
+      
+      if (!validOrderStatuses.includes(orderStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Trạng thái đơn hàng không hợp lệ'
+        });
+      }
+      
+      updates.push('order_status = ?');
+      values.push(orderStatus);
+    }
+
+    if (paymentStatus) {
+      const validPaymentStatuses = ['pending', 'paid', 'failed'];
+      
+      if (!validPaymentStatuses.includes(paymentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Trạng thái thanh toán không hợp lệ'
+        });
+      }
+      
+      updates.push('payment_status = ?');
+      values.push(paymentStatus);
+    }
+
+    updates.push('updated_at = NOW()');
+    query += updates.join(', ') + ' WHERE id = ?';
+    values.push(orderId);
+
+    // Cập nhật đơn hàng
+    await executeQuery({
+      query,
+      values,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật trạng thái đơn hàng thành công'
+    });
+    
+  } catch (error: any) {
+    console.error('Update order status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+} 

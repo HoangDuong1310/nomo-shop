@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng đến với Cloud Shop!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .header .welcome-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        
+        .header .tagline {
+            margin: 10px 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        
+        .welcome-message h2 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-message p {
+            color: #6b7280;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 35px 0;
+        }
+        
+        .feature-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .cta-section h3 {
+            color: #0c4a6e;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .cta-section p {
+            color: #075985;
+            margin-bottom: 25px;
+        }
+        
+        .button {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 14px 35px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 0 10px 10px;
+            transition: all 0.3s;
+        }
+        
+        .button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .button-secondary {
+            background: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        
+        .button-secondary:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .tips-section {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #10b981;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .tips-section h3 {
+            margin: 0 0 15px;
+            color: #166534;
+            font-size: 18px;
+        }
+        
+        .tips-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #166534;
+        }
+        
+        .tips-list li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .social-proof {
+            text-align: center;
+            background-color: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .social-proof h3 {
+            color: #a16207;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #92400e;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #a16207;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .contact-info {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .contact-info h3 {
+            margin: 0 0 15px;
+            color: #374151;
+            font-size: 18px;
+        }
+        
+        .contact-methods {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .contact-method {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .contact-method strong {
+            color: #1f2937;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .contact-method div {
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .footer .company-info {
+            font-weight: 600;
+            color: #374151;
+            font-size: 16px;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 8px 16px;
+            background-color: #e5e7eb;
+            color: #374151;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .social-links a:hover {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 4px;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .header {
+                padding: 25px 15px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .contact-methods {
+                flex-direction: column;
+            }
+            
+            .button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="welcome-icon">🎉</div>
+            <h1>Chào mừng bạn!</h1>
+            <div class="tagline">Cùng khám phá thế giới mua sắm tại Cloud Shop</div>
+        </div>
+        
+        <div class="content">
+            <div class="welcome-message">
+                <h2>Xin chào {{userName}}!</h2>
+                <p>Chúc mừng bạn đã trở thành thành viên của <strong>Cloud Shop</strong>! Chúng tôi rất vui mừng được chào đón bạn vào cộng đồng khách hàng yêu thương của chúng tôi.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛍️</div>
+                    <div class="feature-title">Sản phẩm chất lượng</div>
+                    <div class="feature-desc">Hàng ngàn sản phẩm được tuyển chọn kỹ lưỡng với chất lượng đảm bảo</div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🚚</div>
+                    <div class="feature-title">Giao hàng nhanh</div>
+                    <div class="feature-desc">Giao hàng toàn quốc trong 2-3 ngày, miễn phí với đơn hàng trên 500.000đ</div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💝</div>
+                    <div class="feature-title">Ưu đãi hấp dẫn</div>
+                    <div class="feature-desc">Khuyến mãi liên tục, tích điểm đổi quà và nhiều chương trình thú vị</div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-title">Mua sắm an toàn</div>
+                    <div class="feature-desc">Thanh toán bảo mật, đổi trả dễ dàng trong 30 ngày</div>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h3>🎯 Sẵn sàng bắt đầu mua sắm?</h3>
+                <p>Khám phá ngay bộ sưu tập sản phẩm đa dạng và tìm kiếm những món đồ yêu thích của bạn!</p>
+                
+                <a href="{{shopUrl}}" class="button">
+                    🛒 Khám phá ngay
+                </a>
+                
+                <a href="{{shopUrl}}/account" class="button button-secondary">
+                    👤 Quản lý tài khoản
+                </a>
+            </div>
+            
+            <div class="tips-section">
+                <h3>💡 Mẹo mua sắm thông minh tại Cloud Shop</h3>
+                <ul class="tips-list">
+                    <li><strong>Đăng ký nhận tin:</strong> Để không bỏ lỡ các chương trình khuyến mãi hấp dẫn</li>
+                    <li><strong>Tích điểm thành viên:</strong> Mỗi đơn hàng sẽ được tích điểm để đổi quà</li>
+                    <li><strong>Theo dõi wishlist:</strong> Lưu các sản phẩm yêu thích để mua sau</li>
+                    <li><strong>Đọc review:</strong> Tham khảo đánh giá từ khách hàng khác</li>
+                    <li><strong>Chat hỗ trợ:</strong> Liên hệ ngay nếu cần tư vấn</li>
+                </ul>
+            </div>
+            
+            <div class="social-proof">
+                <h3>🏆 Con số ấn tượng</h3>
+                <p>Cloud Shop được tin tưởng bởi hàng ngàn khách hàng trên toàn quốc</p>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <div class="stat-label">Khách hàng</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Sản phẩm</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">4.8★</div>
+                        <div class="stat-label">Đánh giá</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">99%</div>
+                        <div class="stat-label">Hài lòng</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <h3>📞 Cần hỗ trợ? Chúng tôi luôn sẵn sàng!</h3>
+                
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <strong>📧 Email</strong>
+                        <div>{{supportEmail}}</div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <strong>☎️ Hotline</strong>
+                        <div>(028) 1234 5678</div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <strong>💬 Chat</strong>
+                        <div>Hỗ trợ 8:00 - 22:00</div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <strong>📱 Zalo</strong>
+                        <div>@CloudShop</div>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 35px; color: #6b7280; font-size: 16px;">
+                🌟 <em>Cảm ơn bạn đã chọn Cloud Shop làm người bạn đồng hành trong hành trình mua sắm!</em> 🌟
+            </p>
+        </div>
+        
+        <div class="footer">
+            <div class="company-info">☁️ Cloud Shop</div>
+            <p>📍 123 Đường ABC, Quận XYZ, TP.HCM</p>
+            <p>📞 Hotline: (028) 1234 5678 | ✉️ Email: support@cloudshop.com</p>
+            
+            <div class="social-links">
+                <a href="#">Facebook</a>
+                <a href="#">Instagram</a>
+                <a href="#">Zalo</a>
+                <a href="#">TikTok</a>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+            
+            <p style="font-size: 12px; color: #9ca3af;">
+                Bạn nhận được email này vì đã đăng ký tài khoản tại Cloud Shop.<br>
+                Chúng tôi cam kết không spam và bảo vệ thông tin cá nhân của bạn.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

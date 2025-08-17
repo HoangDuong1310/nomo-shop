@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔔 Đơn hàng mới #{{orderNumber}}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .header .alert-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        
+        .content {
+            padding: 30px 25px;
+        }
+        
+        .alert-summary {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .order-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #d97706;
+            margin: 10px 0;
+        }
+        
+        .customer-info {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .customer-info h3 {
+            margin: 0 0 15px;
+            color: #1f2937;
+            font-size: 16px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        
+        .customer-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .customer-detail span:first-child {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .customer-detail span:last-child {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .items-table th {
+            background-color: #f59e0b;
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .items-table tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        .total-row {
+            background-color: #fef3c7;
+            font-weight: 700;
+            font-size: 16px;
+            color: #92400e;
+        }
+        
+        .shipping-info {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .shipping-info h3 {
+            margin: 0 0 8px;
+            color: #1e40af;
+            font-size: 14px;
+        }
+        
+        .shipping-info p {
+            margin: 0;
+            color: #1e40af;
+        }
+        
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+        
+        .button-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .button-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        
+        .button-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .priority-notice {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .priority-notice h3 {
+            margin: 0 0 8px;
+            color: #dc2626;
+            font-size: 16px;
+        }
+        
+        .priority-notice p {
+            margin: 0;
+            color: #dc2626;
+        }
+        
+        .stats-summary {
+            display: flex;
+            justify-content: space-around;
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer {
+            background-color: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 4px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .customer-detail {
+                flex-direction: column;
+                gap: 2px;
+            }
+            
+            .items-table {
+                font-size: 12px;
+            }
+            
+            .items-table th,
+            .items-table td {
+                padding: 6px 4px;
+            }
+            
+            .stats-summary {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="alert-icon">🔔</div>
+            <h1>ĐỚN HÀNG MỚI #{{orderNumber}}</h1>
+        </div>
+        
+        <div class="content">
+            <div class="alert-summary">
+                <h2 style="margin: 0 0 15px; color: #92400e;">Bạn có đơn hàng mới!</h2>
+                <div class="order-amount">{{orderTotal}}</div>
+                <p style="margin: 5px 0; color: #92400e;">Thời gian: {{orderDate}}</p>
+            </div>
+            
+            <div class="customer-info">
+                <h3>👤 Thông tin khách hàng</h3>
+                
+                <div class="customer-detail">
+                    <span>Tên khách hàng:</span>
+                    <span>{{customerName}}</span>
+                </div>
+                
+                <div class="customer-detail">
+                    <span>Email:</span>
+                    <span>{{customerEmail}}</span>
+                </div>
+                
+                <div class="customer-detail">
+                    <span>Số điện thoại:</span>
+                    <span>{{customerPhone}}</span>
+                </div>
+                
+                <div class="customer-detail">
+                    <span>Mã đơn hàng:</span>
+                    <span><strong>#{{orderNumber}}</strong></span>
+                </div>
+            </div>
+            
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style="text-align: center;">SL</th>
+                        <th style="text-align: right;">Đơn giá</th>
+                        <th style="text-align: right;">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each orderItems}}
+                    <tr>
+                        <td><strong>{{this.name}}</strong></td>
+                        <td style="text-align: center;">{{this.quantity}}</td>
+                        <td style="text-align: right;">{{this.price}}đ</td>
+                        <td style="text-align: right;"><strong>{{multiply this.quantity this.price}}đ</strong></td>
+                    </tr>
+                    {{/each}}
+                    
+                    <tr class="total-row">
+                        <td colspan="3"><strong>TỔNG CỘNG:</strong></td>
+                        <td style="text-align: right;"><strong>{{orderTotal}}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="shipping-info">
+                <h3>📍 Thông tin giao hàng</h3>
+                <p><strong>Địa chỉ:</strong> {{shippingAddress}}</p>
+                {{#if orderNote}}
+                <p><strong>Ghi chú:</strong> {{orderNote}}</p>
+                {{/if}}
+            </div>
+            
+            <div class="priority-notice">
+                <h3>⚡ Cần xử lý ngay</h3>
+                <p>Đơn hàng mới cần được xác nhận trong vòng <strong>2 giờ</strong> để đảm bảo trải nghiệm tốt nhất cho khách hàng.</p>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{{adminOrderUrl}}" class="button button-primary">
+                    ✅ Xử lý đơn hàng
+                </a>
+                <a href="{{adminOrderUrl}}" class="button button-secondary">
+                    👁️ Xem chi tiết
+                </a>
+            </div>
+            
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Đơn hàng mới</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{orderItems.length}}</div>
+                    <div class="stat-label">Sản phẩm</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">⏰</div>
+                    <div class="stat-label">Cần xác nhận</div>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 25px; color: #6b7280; font-size: 14px;">
+                💡 <strong>Tip:</strong> Xác nhận đơn hàng nhanh chóng sẽ tăng mức độ hài lòng của khách hàng!
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Cloud Shop Admin Panel</strong></p>
+            <p>Email thông báo tự động - {{orderDate}}</p>
+            <p>Đừng quên kiểm tra các đơn hàng khác trong admin panel!</p>
+        </div>
+    </div>
+</body>
+</html>
