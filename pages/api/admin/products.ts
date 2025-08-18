@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { executeQuery, executeQueryWithPagination } from '../../../lib/db';
+import { executeQuery } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Chỉ chấp nhận phương thức GET
@@ -10,8 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Lấy token từ cookie hoặc Authorization header
-    const token = getTokenFromRequest(req);
+    // Lấy token từ cookie
+    const token = req.cookies.auth_token;
     
     // Nếu không có token
     if (!token) {
@@ -44,64 +43,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Lấy tham số phân trang với validation mạnh mẽ
-    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(String(req.query.limit)) || 10));
+    // Lấy tham số phân trang, tìm kiếm, lọc
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 10;
     const offset = (page - 1) * limit;
     const search = req.query.search ? String(req.query.search) : '';
     const category = req.query.category ? String(req.query.category) : '';
 
-    // Tạo câu truy vấn SQL cơ bản
-    let query = `
+    // WHERE động & params cơ bản
+    let whereClause = 'WHERE 1=1';
+    const baseParams: any[] = [];
+
+    if (search) {
+      whereClause += ' AND (p.name LIKE ? OR p.description LIKE ?)';
+      const sv = `%${search}%`;
+      baseParams.push(sv, sv);
+    }
+    if (category) {
+      whereClause += ' AND p.category_id = ?';
+      baseParams.push(category);
+    }
+
+    const countQuery = `SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.category_id = c.id ${whereClause}`;
+    const totalResult = await executeQuery({
+      query: countQuery,
+      values: baseParams,
+    });
+
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safeOffset = Math.max(offset, 0);
+
+    const dataQuery = `
       SELECT p.*, c.name AS category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-      WHERE 1=1
+      ${whereClause}
+      ORDER BY p.is_featured DESC, p.created_at DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
-    
-    // Array để lưu các giá trị tham số cho câu truy vấn
-    const queryParams: any[] = [];
 
-    // Thêm điều kiện tìm kiếm
-    if (search) {
-      query += ` AND (
-        p.name LIKE ? 
-        OR p.description LIKE ?
-      )`;
-      const searchValue = `%${search}%`;
-      queryParams.push(searchValue, searchValue);
-    }
-
-    // Thêm điều kiện lọc theo danh mục
-    if (category) {
-      query += ' AND p.category_id = ?';
-      queryParams.push(category);
-    }
-
-    // Câu truy vấn đếm tổng số sản phẩm theo điều kiện tìm kiếm
-    let countQuery = query.replace(
-      'SELECT p.*, c.name AS category_name',
-      'SELECT COUNT(*) as total'
-    );
-
-    // Thêm phân trang và sắp xếp vào câu truy vấn chính
-    query += ' ORDER BY p.is_featured DESC, p.created_at DESC';
-
-    // Thực hiện cả hai truy vấn
-    const totalResult = await executeQuery({
-      query: countQuery,
-      values: queryParams, // Sử dụng các tham số hiện tại (không có LIMIT/OFFSET)
+    const products = await executeQuery({
+      query: dataQuery,
+      values: baseParams,
     });
 
-    const products = await executeQueryWithPagination({
-      query,
-      values: queryParams,
-      limit,
-      offset
-    });
-
-    // Lấy tổng số sản phẩm từ kết quả đếm
-    const total = (totalResult as any[])[0].total || 0;
+    const totalRow = (totalResult as any[])[0];
+    const total = totalRow ? (totalRow as any).total : 0;
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedProducts = JSON.parse(JSON.stringify(products));

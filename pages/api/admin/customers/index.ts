@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { executeQuery, executeQueryWithPagination } from '../../../../lib/db';
+import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
-import { getTokenFromRequest } from '../../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Chỉ chấp nhận phương thức GET
@@ -10,8 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Lấy token từ cookie hoặc Authorization header
-    const token = getTokenFromRequest(req);
+    // Lấy token từ cookie
+    const token = req.cookies.auth_token;
     
     // Nếu không có token
     if (!token) {
@@ -44,9 +43,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Lấy tham số phân trang với validation mạnh mẽ
-    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(String(req.query.limit)) || 10));
+    // Lấy tham số phân trang và tìm kiếm
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 10;
     const offset = (page - 1) * limit;
     const search = req.query.search ? String(req.query.search) : '';
 
@@ -63,67 +62,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       values: [],
     });
 
-    // Tạo câu truy vấn SQL cơ bản cho danh sách khách hàng
-    let query = `
+    // WHERE động
+    let whereClause = "WHERE u.role = 'user'";
+    const whereParams: any[] = [];
+    if (search) {
+      whereClause += ' AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)';
+      const sv = `%${search}%`;
+      whereParams.push(sv, sv, sv);
+    }
+
+    // Query đếm
+    const countQuery = `SELECT COUNT(*) as total FROM users u ${whereClause}`;
+    const totalResult = await executeQuery({ query: countQuery, values: whereParams });
+
+    const safeLimit = Math.min(Math.max(limit,1),100);
+    const safeOffset = Math.max(offset,0);
+
+    // Query dữ liệu (kèm subqueries)
+    const dataQuery = `
       SELECT 
-        u.*,
+        u.*, 
         (SELECT COUNT(*) FROM orders WHERE user_id = u.id) as orders_count,
         (SELECT COALESCE(SUM(total), 0) FROM orders WHERE user_id = u.id) as total_spent
       FROM users u
-      WHERE u.role = 'user'
+      ${whereClause}
+      ORDER BY u.created_at DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
-    
-    // Array để lưu các giá trị tham số cho câu truy vấn
-    const queryParams: any[] = [];
+    const users = await executeQuery({ query: dataQuery, values: whereParams });
 
-    // Thêm điều kiện tìm kiếm
-    if (search) {
-      query += ` AND (
-        u.name LIKE ? 
-        OR u.email LIKE ? 
-        OR u.phone LIKE ?
-      )`;
-      const searchValue = `%${search}%`;
-      queryParams.push(searchValue, searchValue, searchValue);
-    }
-
-    // Câu truy vấn đếm tổng số khách hàng theo điều kiện tìm kiếm
-    let countQuery = `
-      SELECT COUNT(*) as total
-      FROM users u
-      WHERE u.role = 'user'
-    `;
-    
-    if (search) {
-      countQuery += ` AND (
-        u.name LIKE ? 
-        OR u.email LIKE ? 
-        OR u.phone LIKE ?
-      )`;
-    }
-
-    // Thêm phân trang và sắp xếp vào câu truy vấn chính
-    query += ' ORDER BY u.created_at DESC';
-
-    // Thực hiện các truy vấn
-    const totalResult = await executeQuery({
-      query: countQuery,
-      values: search ? [
-        `%${search}%`, 
-        `%${search}%`, 
-        `%${search}%`
-      ] : [],
-    });
-
-    const users = await executeQueryWithPagination({
-      query,
-      values: queryParams,
-      limit,
-      offset
-    });
-
-    // Lấy tổng số khách hàng từ kết quả đếm
-    const total = (totalResult as any[])[0].total || 0;
+    const totalRow = (totalResult as any[])[0];
+    const total = totalRow ? (totalRow as any).total : 0;
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedUsers = JSON.parse(JSON.stringify(users));

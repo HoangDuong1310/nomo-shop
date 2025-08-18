@@ -68,55 +68,53 @@ const ReportsPage: NextPage = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
     const fetchReportData = async () => {
       setIsLoading(true);
       try {
-        // In a real application, this would be an API call
-        // const response = await fetch(`/api/admin/reports?range=${dateRange}`);
-        // const data = await response.json();
-        // setReportData(data);
-        
-        // For now, using mock data
-        setTimeout(() => {
-          const mockSalesData = [];
-          const today = new Date();
-          
-          // Generate mock sales data
-          for (let i = 13; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(today.getDate() - i);
-            mockSalesData.push({
-              date: date.toISOString(),
-              total: Math.floor(Math.random() * 5000000) + 500000,
-              orders: Math.floor(Math.random() * 10) + 1
-            });
-          }
-          
-          setReportData({
-            sales: mockSalesData,
-            products: [
-              { id: 'prod1', name: 'Cà phê đen', total_sold: 120, revenue: 2400000 },
-              { id: 'prod2', name: 'Cà phê sữa', total_sold: 150, revenue: 3750000 },
-              { id: 'prod3', name: 'Bạc xỉu', total_sold: 95, revenue: 2375000 },
-              { id: 'prod4', name: 'Trà sữa trân châu', total_sold: 85, revenue: 2550000 },
-              { id: 'prod5', name: 'Trà đào cam sả', total_sold: 78, revenue: 1950000 },
-            ],
-            customers: {
-              total_customers: 87,
-              new_customers: 15,
-              repeat_customers: 72,
-              avg_order_value: 250000
-            }
-          });
-          setIsLoading(false);
-        }, 800);
+        const response = await fetch(`/api/admin/reports?range=${dateRange}`, {
+          credentials: 'include'
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        if (cancelled) return;
+
+        // Normalise data shapes (phòng trường hợp API trả chuỗi)
+        const sales = (data.sales || []).map((d: any) => ({
+          date: d.date || d.created_at || new Date().toISOString(),
+            // API trả date dạng 'YYYY-MM-DD' => giữ nguyên (formatDate xử lý)
+          total: Number(d.total) || 0,
+          orders: Number(d.orders) || 0
+        }));
+        const products = (data.products || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          total_sold: Number(p.total_sold) || 0,
+          revenue: Number(p.revenue) || 0
+        }));
+        const customers = {
+          total_customers: Number(data.customers?.total_customers) || 0,
+          new_customers: Number(data.customers?.new_customers) || 0,
+          repeat_customers: Number(data.customers?.repeat_customers) || 0,
+          avg_order_value: Number(data.customers?.avg_order_value) || 0
+        };
+
+        setReportData({ sales, products, customers });
       } catch (error) {
-        console.error('Error fetching report data:', error);
-        setIsLoading(false);
+        if (!cancelled) {
+          console.error('Error fetching report data:', error);
+          // Giữ nguyên state cũ nhưng tắt loading
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     };
-
     fetchReportData();
+    return () => {
+      cancelled = true;
+    };
   }, [dateRange]);
 
   return (
@@ -173,23 +171,30 @@ const ReportsPage: NextPage = () => {
               {/* Sales Chart */}
               <div className="h-64 mb-8 border border-gray-200 rounded-lg p-4">
                 {/* In a real application, this would be a chart component */}
-                <div className="flex h-full items-end space-x-2">
-                  {reportData.sales.map((day, index) => {
-                    const height = (day.total / 5000000) * 100; // Scale for visualization
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1">
-                        <div 
-                          className="bg-primary-500 hover:bg-primary-600 rounded-t w-full transition-all duration-200"
-                          style={{ height: `${height}%` }}
-                          title={`${formatCurrency(day.total)} - ${day.orders} đơn hàng`}
-                        ></div>
-                        <div className="text-xs mt-2 text-gray-600">
-                          {formatDate(day.date)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {reportData.sales.length === 0 ? (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Chưa có dữ liệu</div>
+                ) : (
+                  <div className="flex h-full items-end space-x-2">
+                    {(() => {
+                      const maxTotal = Math.max(...reportData.sales.map(s => s.total), 1);
+                      return reportData.sales.map((day, index) => {
+                        const height = (day.total / maxTotal) * 100; // scale theo max thực tế
+                        return (
+                          <div key={index} className="flex flex-col items-center flex-1">
+                            <div
+                              className="bg-primary-500 hover:bg-primary-600 rounded-t w-full transition-all duration-200"
+                              style={{ height: `${height}%` }}
+                              title={`${formatCurrency(day.total)} - ${day.orders} đơn hàng`}
+                            ></div>
+                            <div className="text-xs mt-2 text-gray-600">
+                              {formatDate(day.date)}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Sales Summary */}

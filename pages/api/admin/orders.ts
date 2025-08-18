@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { executeQuery, executeQueryWithPagination } from '../../../lib/db';
+import { executeQuery } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Chỉ chấp nhận phương thức GET
@@ -10,8 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Lấy token từ cookie hoặc Authorization header
-    const token = getTokenFromRequest(req);
+    // Lấy token từ cookie
+    const token = req.cookies.auth_token;
     
     // Nếu không có token
     if (!token) {
@@ -44,66 +43,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Lấy tham số phân trang với validation mạnh mẽ
-    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(String(req.query.limit)) || 10));
+    // Lấy tham số phân trang, tìm kiếm, lọc
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 10;
     const offset = (page - 1) * limit;
     const search = req.query.search ? String(req.query.search) : '';
     const status = req.query.status ? String(req.query.status) : '';
 
-    // Tạo câu truy vấn SQL cơ bản
-    let query = `
+    // Xây dựng phần WHERE động và tham số (chưa gồm LIMIT/OFFSET)
+    let whereClause = 'WHERE 1=1';
+    const baseParams: any[] = [];
+
+    if (search) {
+      whereClause += ` AND (o.id LIKE ? OR o.full_name LIKE ? OR o.phone LIKE ? OR o.address LIKE ?)`;
+      const sv = `%${search}%`;
+      baseParams.push(sv, sv, sv, sv);
+    }
+
+    if (status) {
+      whereClause += ' AND o.order_status = ?';
+      baseParams.push(status);
+    }
+
+    // Câu truy vấn đếm
+    const countQuery = `SELECT COUNT(*) as total FROM orders o ${whereClause}`;
+    const totalResult = await executeQuery({
+      query: countQuery,
+      values: baseParams,
+    });
+
+    // Bảo đảm limit/offset hợp lệ và tránh giá trị bất thường
+    const safeLimit = Math.min(Math.max(limit, 1), 100); // giới hạn tối đa 100 / trang
+    const safeOffset = Math.max(offset, 0);
+
+    // Câu truy vấn lấy dữ liệu
+    const dataQuery = `
       SELECT o.id, o.full_name, o.phone, o.total, o.order_status,
              o.payment_status, o.payment_method, o.created_at
       FROM orders o
-      WHERE 1=1
+      ${whereClause}
+      ORDER BY o.created_at DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
-    
-    // Array để lưu các giá trị tham số cho câu truy vấn
-    const queryParams: any[] = [];
 
-    // Thêm điều kiện tìm kiếm
-    if (search) {
-      query += ` AND (
-        o.id LIKE ? 
-        OR o.full_name LIKE ? 
-        OR o.phone LIKE ? 
-        OR o.address LIKE ?
-      )`;
-      const searchValue = `%${search}%`;
-      queryParams.push(searchValue, searchValue, searchValue, searchValue);
-    }
-
-    // Thêm điều kiện lọc theo trạng thái
-    if (status) {
-      query += ' AND o.order_status = ?';
-      queryParams.push(status);
-    }
-
-    // Câu truy vấn đếm tổng số đơn hàng theo điều kiện tìm kiếm
-    let countQuery = query.replace(
-      'SELECT o.id, o.full_name, o.phone, o.total, o.order_status, o.payment_status, o.payment_method, o.created_at',
-      'SELECT COUNT(*) as total'
-    );
-
-    // Thêm phân trang vào câu truy vấn chính
-    query += ' ORDER BY o.created_at DESC';
-
-    // Thực hiện cả hai truy vấn
-    const totalResult = await executeQuery({
-      query: countQuery,
-      values: queryParams, // Sử dụng các tham số hiện tại (không có LIMIT/OFFSET)
+    // Lưu ý: Inject trực tiếp LIMIT/OFFSET (đã sanitize) để tránh lỗi một số version MySQL với placeholder LIMIT ? OFFSET ?
+    const orders = await executeQuery({
+      query: dataQuery,
+      values: baseParams,
     });
 
-    const orders = await executeQueryWithPagination({
-      query,
-      values: queryParams,
-      limit,
-      offset
-    });
-
-    // Lấy tổng số đơn hàng từ kết quả đếm
-    const total = (totalResult as any[])[0].total || 0;
+    const totalRow = (totalResult as any[])[0];
+    const total = totalRow ? (totalRow as any).total : 0;
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedOrders = JSON.parse(JSON.stringify(orders));
