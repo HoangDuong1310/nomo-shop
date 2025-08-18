@@ -5,11 +5,11 @@ const mysql = require('mysql2/promise');
 async function createAdmin() {
   // Kết nối database
   const connection = await mysql.createConnection({
-    host: process.env.MYSQL_HOST || 'localhost',
-    port: parseInt(process.env.MYSQL_PORT || '3306'),
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'cloudshop',
+    host: process.env.DB_HOST || process.env.MYSQL_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT || '3306'),
+    user: process.env.DB_USER || process.env.MYSQL_USER || 'root',
+    password: process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || '',
+    database: process.env.DB_DATABASE || process.env.MYSQL_DATABASE || 'cloudshop',
   });
 
   try {
