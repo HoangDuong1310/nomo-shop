@@ -67,6 +67,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error(data.message || 'Đăng nhập thất bại');
       }
 
+      // Lưu token vào localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       setUser(data.user);
       toast.success('Đăng nhập thành công!');
       return true;
@@ -105,6 +110,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await fetch('/api/auth/logout', {
         method: 'POST',
       });
+      
+      // Xóa token khỏi localStorage
+      localStorage.removeItem('token');
+      
       setUser(null);
       toast.success('Đã đăng xuất');
       router.push('/');
