@@ -71,7 +71,7 @@ async function getProduct(req: NextApiRequest, res: NextApiResponse, id: string)
     }
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
-    const serializedProduct = JSON.parse(JSON.stringify(product[0]));
+    const serializedProduct = JSON.parse(JSON.stringify((product as any)[0]));
 
     return res.status(200).json({
       success: true,

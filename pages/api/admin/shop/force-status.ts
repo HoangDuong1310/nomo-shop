@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `
         });
 
-        const settings = results.reduce((acc: any, row: any) => {
+        const settings = (results as any[]).reduce((acc: any, row: any) => {
           acc[row.setting_key] = row.setting_value;
           return acc;
         }, {});

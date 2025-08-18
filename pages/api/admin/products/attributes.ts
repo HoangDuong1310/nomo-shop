@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       query: 'SELECT role FROM users WHERE id = ?',
       values: [decoded.id],
     });
-    if (!Array.isArray(userResult) || userResult.length === 0 || userResult[0].role !== 'admin') {
+    if (!Array.isArray(userResult) || userResult.length === 0 || (userResult[0] as any).role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 

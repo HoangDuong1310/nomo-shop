@@ -125,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedUsers = JSON.parse(JSON.stringify(users));
-    const serializedStats = JSON.parse(JSON.stringify(statsQuery[0]));
+    const serializedStats = JSON.parse(JSON.stringify((statsQuery as any)[0]));
 
     // Trả về kết quả
     res.status(200).json({

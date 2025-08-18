@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       values: [decodedToken.id],
     });
 
-    if (!Array.isArray(userResult) || userResult.length === 0 || userResult[0].role !== 'admin') {
+    if (!Array.isArray(userResult) || userResult.length === 0 || (userResult[0] as any).role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
@@ -182,7 +182,7 @@ async function handleDeleteAttribute(req: NextApiRequest, res: NextApiResponse) 
       values: [attributeId],
     });
 
-    if (Array.isArray(usageCheck) && usageCheck[0].count > 0) {
+    if (Array.isArray(usageCheck) && (usageCheck[0] as any).count > 0) {
       return res.status(409).json({
         success: false,
         message: 'Cannot delete attribute that is being used by products'
