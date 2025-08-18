@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { executeQuery } from '../../../../lib/db';
+import { executeQuery, executeQueryWithPagination } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
 import { getTokenFromRequest } from '../../../../lib/auth-utils';
 
@@ -103,8 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Thêm phân trang và sắp xếp vào câu truy vấn chính
-    query += ' ORDER BY u.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(limit, offset);
+    query += ' ORDER BY u.created_at DESC';
 
     // Thực hiện các truy vấn
     const totalResult = await executeQuery({
@@ -116,9 +115,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ] : [],
     });
 
-    const users = await executeQuery({
+    const users = await executeQueryWithPagination({
       query,
       values: queryParams,
+      limit,
+      offset
     });
 
     // Lấy tổng số khách hàng từ kết quả đếm

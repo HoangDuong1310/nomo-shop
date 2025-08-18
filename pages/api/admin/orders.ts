@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { executeQuery } from '../../../lib/db';
+import { executeQuery, executeQueryWithPagination } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth';
 import { getTokenFromRequest } from '../../../lib/auth-utils';
 
@@ -87,18 +87,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     // Thêm phân trang vào câu truy vấn chính
-    query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(limit, offset);
+    query += ' ORDER BY o.created_at DESC';
 
     // Thực hiện cả hai truy vấn
     const totalResult = await executeQuery({
       query: countQuery,
-      values: [...queryParams.slice(0, queryParams.length - 2)], // Không cần LIMIT và OFFSET cho câu đếm
+      values: queryParams, // Sử dụng các tham số hiện tại (không có LIMIT/OFFSET)
     });
 
-    const orders = await executeQuery({
+    const orders = await executeQueryWithPagination({
       query,
       values: queryParams,
+      limit,
+      offset
     });
 
     // Lấy tổng số đơn hàng từ kết quả đếm
