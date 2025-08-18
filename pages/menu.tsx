@@ -17,6 +17,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
+  sale_price?: number | null;
   image: string | null;
   description: string;
   category_id: string;
@@ -113,6 +114,7 @@ const Menu: NextPage<MenuProps> = ({ initialCategories, initialProducts }) => {
                 id={product.id}
                 name={product.name}
                 price={product.price}
+                sale_price={product.sale_price}
                 image={product.image}
                 description={product.description}
               />
@@ -146,7 +148,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
     // Lấy danh sách sản phẩm
     const products = await executeQuery({
-      query: 'SELECT * FROM products ORDER BY name',
+      query: 'SELECT id, name, description, price, sale_price, image, category_id, stock_quantity, is_featured, is_active, created_at, updated_at FROM products ORDER BY is_featured DESC, created_at DESC',
     });
 
     // Hàm xử lý để chuyển đổi các trường Date thành chuỗi ISO

@@ -167,12 +167,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
 
       // Gửi email xác nhận đơn hàng cho khách hàng
-      await EmailService.sendOrderConfirmation(orderForEmail);
-      console.log(`✅ Order confirmation email sent to ${customerInfo.email}`);
+      if (customerInfo.email && String(customerInfo.email).trim()) {
+        EmailService.sendAsync(customerInfo.email, {
+          type: 'order_confirmation',
+          subject: `Xác nhận đơn hàng #${orderId.substring(0, 8)} - Cloud Shop`,
+          templatePath: 'order-confirmation.html',
+          variables: {
+            customerName: customerInfo.name,
+            orderNumber: orderId.substring(0, 8),
+            orderDate: new Date().toLocaleDateString('vi-VN'),
+            orderItems: items.map((item: any) => ({ name: item.name, quantity: item.quantity, price: item.price, image: item.image || '' })),
+            orderTotal: EmailService.formatCurrency(serverTotal),
+            shippingAddress: customerInfo.address,
+            orderNote: customerInfo.note || '',
+            trackOrderUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/account/orders/${orderId}`,
+            supportEmail: process.env.ADMIN_EMAIL || 'support@cloudshop.com',
+          }
+        } as any);
+      } else {
+        console.warn('⚠️ Skip sending customer confirmation email: no customer email provided');
+      }
 
       // Gửi alert email cho admin
-      await EmailService.sendNewOrderAlert(orderForEmail);
-      console.log(`✅ New order alert sent to admin`);
+      EmailService.sendAsync(process.env.ADMIN_EMAIL, {
+        type: 'admin_new_order',
+        subject: `🔔 Đơn hàng mới #${orderId.substring(0, 8)} - ${EmailService.formatCurrency(serverTotal)}`,
+        templatePath: 'admin-new-order.html',
+        variables: {
+          orderNumber: orderId.substring(0, 8),
+            customerName: customerInfo.name,
+            customerEmail: customerInfo.email,
+            customerPhone: customerInfo.phone,
+            orderTotal: EmailService.formatCurrency(serverTotal),
+            orderItems: items.map((item: any) => ({ name: item.name, quantity: item.quantity, price: item.price, image: item.image || '' })),
+            shippingAddress: customerInfo.address,
+            orderNote: customerInfo.note || '',
+            orderDate: new Date().toLocaleString('vi-VN'),
+            adminOrderUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${orderId}`,
+        }
+      } as any);
 
     } catch (emailError) {
       console.error('⚠️ Failed to send order emails:', emailError);

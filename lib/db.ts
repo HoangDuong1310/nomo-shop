@@ -85,10 +85,17 @@ export async function executeQueryWithPagination({
     // Append LIMIT and OFFSET directly to the query (safe because they're validated integers)
     const paginatedQuery = `${query} LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
-    // Use execute for other parameters (for prepared statement safety)
-    // but with LIMIT and OFFSET already interpolated
-    const [results] = await currentPool.execute(paginatedQuery, values);
-    return results;
+    // Use query() method instead of execute() when we have mixed parameters
+    // This avoids the prepared statement parameter count mismatch
+    if (values && values.length > 0) {
+      // Escape the values to prevent SQL injection
+      const [results] = await currentPool.query(paginatedQuery, values);
+      return results;
+    } else {
+      // If no values, we can use execute safely
+      const [results] = await currentPool.execute(paginatedQuery);
+      return results;
+    }
   } catch (error) {
     console.error('Database error:', error);
     throw error;

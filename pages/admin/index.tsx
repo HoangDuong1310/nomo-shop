@@ -9,8 +9,11 @@ import {
   FaMoneyBillWave,
   FaArrowUp,
   FaArrowDown,
-  FaSpinner
+  FaSpinner,
+  FaChartLine
 } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+const SalesLineChart = dynamic(() => import('../../components/charts/SalesLineChart').then(m => m.default), { ssr: false });
 import AdminLayout from '../../components/Layout/AdminLayout';
 
 interface DashboardStat {
@@ -191,6 +194,28 @@ const AdminDashboard: NextPage = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Mini biểu đồ doanh thu (mẫu demo) */}
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <FaChartLine className="text-primary-600" />
+                <h2 className="text-lg font-semibold">Xu hướng doanh thu (demo)</h2>
+              </div>
+              <a href="/admin/reports" className="text-sm text-primary-600 hover:underline">Xem chi tiết</a>
+            </div>
+            <div className="h-56 p-4">
+              <SalesLineChart
+                data={Array.from({length: 10}).map((_,i)=>({
+                  date: new Date(Date.now() - (9-i)*86400000).toISOString().slice(0,10),
+                  total: 2000000 + Math.random()*1500000,
+                  orders: 5 + Math.round(Math.random()*10)
+                }))}
+                currencyFormatter={(v)=> new Intl.NumberFormat('vi-VN',{style:'currency', currency:'VND'}).format(v)}
+                height={180}
+              />
+            </div>
           </div>
 
           {/* Đơn hàng gần đây */}

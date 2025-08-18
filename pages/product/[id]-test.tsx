@@ -143,10 +143,11 @@ const Product = ({ product }: ProductProps) => {
           {/* Hình ảnh sản phẩm */}
           <div className="relative w-full pt-[100%] bg-gray-100 rounded-lg overflow-hidden">
             <Image
-              src={product.image || 'https://via.placeholder.com/500x500/f3f4f6/9ca3af?text=No+Image'}
+              src={product.image || '/images/placeholder.svg'}
               alt={product.name}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, 500px"
             />
           </div>
 

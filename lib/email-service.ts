@@ -35,13 +35,19 @@ export interface Order {
 
 export class EmailService {
   private static transporter: nodemailer.Transporter;
+  private static initializing: Promise<void> | null = null;
 
   static async init() {
+    if (this.transporter) return; // already ready
+    if (this.initializing) {
+      await this.initializing; return;
+    }
+    this.initializing = (async () => {
     // Đăng ký Handlebars helpers
     this.registerHandlebarsHelpers();
 
-    // Khởi tạo SMTP transporter
-    this.transporter = nodemailer.createTransport({
+  // Khởi tạo SMTP transporter
+  this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false,
@@ -58,6 +64,9 @@ export class EmailService {
     } catch (error) {
       console.error('❌ Email service initialization failed:', error);
     }
+    })();
+    await this.initializing;
+    this.initializing = null;
   }
 
   private static registerHandlebarsHelpers() {
@@ -87,10 +96,24 @@ export class EmailService {
     });
   }
 
-  static async send(to: string, template: EmailTemplate): Promise<boolean> {
+  static async send(to: string | undefined | null, template: EmailTemplate): Promise<boolean> {
     try {
       if (!this.transporter) {
         await this.init();
+      }
+
+      // Validate recipient
+      if (!to || !String(to).trim()) {
+        const msg = 'Missing recipient email';
+        console.warn('⚠️ Skip sending email -', msg, template.subject);
+        await this.logEmail({
+          recipient_email: '',
+          template_type: template.type,
+            subject: template.subject,
+            status: 'failed',
+            error_message: msg,
+        });
+        return false;
       }
 
       // Đảm bảo helpers được đăng ký
@@ -125,7 +148,7 @@ export class EmailService {
       
       // Log email thất bại
       await this.logEmail({
-        recipient_email: to,
+        recipient_email: to || '',
         template_type: template.type,
         subject: template.subject,
         status: 'failed',
@@ -136,20 +159,37 @@ export class EmailService {
     }
   }
 
+  /**
+   * Gửi email không đồng bộ: trả Promise resolved ngay (không chờ SMTP) nếu EMAIL_ASYNC != 'false'.
+   * Dùng cho luồng tạo đơn để không chậm phản hồi người dùng.
+   */
+  static async sendAsync(to: string | undefined | null, template: EmailTemplate): Promise<boolean> {
+    const asyncEnabled = process.env.EMAIL_ASYNC !== 'false';
+    if (!asyncEnabled) {
+      return this.send(to, template); // fallback đồng bộ
+    }
+    setImmediate(() => {
+      this.send(to, template).catch(err => {
+        console.error('Async email send error:', err);
+      });
+    });
+    return true; // giả định queued
+  }
+
   static async loadTemplate(templatePath: string): Promise<string> {
     const fullPath = path.join(process.cwd(), 'email-templates', templatePath);
     return fs.readFileSync(fullPath, 'utf8');
   }
 
   static async logEmail(emailData: {
-    recipient_email: string;
-    template_type: string;
-    subject: string;
+    recipient_email: string | undefined | null;
+    template_type: string | undefined;
+    subject: string | undefined;
     status: 'pending' | 'sent' | 'failed';
     message_id?: string;
     error_message?: string;
-    order_id?: string;
-    user_id?: string;
+    order_id?: string | undefined | null;
+    user_id?: string | undefined | null;
   }) {
     try {
       await executeQuery({
@@ -164,9 +204,9 @@ export class EmailService {
           )
         `,
         values: [
-          emailData.recipient_email,
-          emailData.template_type,
-          emailData.subject,
+          emailData.recipient_email || null,
+          emailData.template_type || 'unknown',
+          emailData.subject || '(no subject)',
           emailData.status,
           emailData.error_message || null,
           emailData.order_id || null,
@@ -286,8 +326,13 @@ export class EmailService {
     };
 
     let success = true;
+    if (adminEmails.length === 0) {
+      console.warn('⚠️ No admin emails configured for new order alert');
+      await this.logEmail({ recipient_email: '', template_type: template.type, subject: template.subject, status: 'failed', error_message: 'No admin recipients configured' });
+      return false;
+    }
     for (const email of adminEmails) {
-      const result = await this.send(email!, template);
+      const result = await this.send(email, template);
       success = success && result;
     }
 
@@ -314,8 +359,13 @@ export class EmailService {
     };
 
     let success = true;
+    if (adminEmails.length === 0) {
+      console.warn('⚠️ No admin emails configured for payment received alert');
+      await this.logEmail({ recipient_email: '', template_type: template.type, subject: template.subject, status: 'failed', error_message: 'No admin recipients configured' });
+      return false;
+    }
     for (const email of adminEmails) {
-      const result = await this.send(email!, template);
+      const result = await this.send(email, template);
       success = success && result;
     }
 

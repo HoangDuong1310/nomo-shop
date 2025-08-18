@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fa';
 import AdminLayout from '../../../components/Layout/AdminLayout';
 import { toast } from 'react-toastify';
-import { formatPrice, hasDiscount } from '../../../lib/price-utils';
+import { formatPrice, hasDiscount, getDisplayPrice, getDiscountPercent } from '../../../lib/price-utils';
 
 interface Product {
   id: string;
@@ -284,25 +284,29 @@ const ProductsAdminPage: NextPage = () => {
                       <span className="text-sm text-gray-900">{product.category_name}</span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      {hasDiscount(product.price, product.sale_price) ? (
-                        <div className="space-y-1">
-                          {/* Giá gốc bị gạch ngang */}
-                          <div className="text-xs text-gray-400 line-through">
-                            {formatCurrency(product.price)}
+                      {(() => {
+                        const price = Number(product.price);
+                        const sale = product.sale_price != null ? Number(product.sale_price) : null;
+                        if (hasDiscount(price, sale)) {
+                          const percent = getDiscountPercent(price, sale!);
+                          return (
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-400 line-through">
+                                {formatCurrency(price)}
+                              </div>
+                              <div className="text-sm font-bold text-red-600 flex items-center justify-center gap-1">
+                                {formatCurrency(getDisplayPrice(price, sale))}
+                                <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-medium">-{percent}%</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="text-sm text-gray-900 font-medium">
+                            {formatCurrency(price)}
                           </div>
-                          {/* Giá khuyến mãi */}
-                          <div className="text-sm font-bold text-red-600">
-                            {formatCurrency(product.sale_price!)}
-                          </div>
-                          <div className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full inline-block">
-                            SALE
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-900 font-medium">
-                          {formatCurrency(product.price)}
-                        </div>
-                      )}
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
                       <span className={`${product.stock_quantity <= 5 ? 'text-red-600 font-medium' : 'text-gray-900'}`}>

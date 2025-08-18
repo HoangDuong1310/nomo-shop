@@ -48,10 +48,11 @@ const Cart: NextPage = () => {
                   {/* Hình ảnh sản phẩm */}
                   <div className="sm:w-24 h-24 relative rounded-md overflow-hidden bg-gray-100">
                     <Image
-                      src={item.image || 'https://via.placeholder.com/96x96/f3f4f6/9ca3af?text=No+Image'}
+                      src={item.image || '/images/placeholder.svg'}
                       alt={item.name}
                       fill
                       className="object-cover"
+                      sizes="96px"
                     />
                   </div>
                   

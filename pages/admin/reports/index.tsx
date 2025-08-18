@@ -8,8 +8,12 @@ import {
   FaSpinner, 
   FaBoxOpen,
   FaShoppingBag,
-  FaUsers
+  FaUsers,
+  FaExchangeAlt
 } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+const SalesLineChart = dynamic(() => import('../../../components/charts/SalesLineChart').then(m => m.default), { ssr: false });
+const SalesBarChart = dynamic(() => import('../../../components/charts/SalesLineChart').then(m => m.SalesBarChart), { ssr: false });
 import AdminLayout from '../../../components/Layout/AdminLayout';
 
 interface SalesData {
@@ -51,6 +55,8 @@ const ReportsPage: NextPage = () => {
     }
   });
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'year'>('week');
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+  const [showOrders, setShowOrders] = useState<boolean>(true);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -160,40 +166,42 @@ const ReportsPage: NextPage = () => {
         <div className="space-y-6">
           {/* Sales Overview */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b">
+            <div className="px-6 py-4 border-b flex flex-wrap gap-4 items-center justify-between">
               <div className="flex items-center">
-                <FaChartLine className="text-primary-600 mr-2" />
-                <h2 className="text-lg font-semibold">Doanh thu</h2>
+                {chartType === 'line' ? <FaChartLine className="text-primary-600 mr-2" /> : <FaChartBar className="text-primary-600 mr-2" />}
+                <h2 className="text-lg font-semibold">Doanh thu & Đơn hàng</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setChartType(prev => prev === 'line' ? 'bar' : 'line')}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                  title="Đổi kiểu biểu đồ"
+                >
+                  <FaExchangeAlt className="text-gray-600" />
+                  <span>{chartType === 'line' ? 'Biểu đồ cột' : 'Biểu đồ đường'}</span>
+                </button>
+                <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                  <input type="checkbox" checked={showOrders} onChange={e => setShowOrders(e.target.checked)} />
+                  <span>Hiển thị số đơn</span>
+                </label>
               </div>
             </div>
 
             <div className="p-6">
               {/* Sales Chart */}
-              <div className="h-64 mb-8 border border-gray-200 rounded-lg p-4">
-                {/* In a real application, this would be a chart component */}
-                {reportData.sales.length === 0 ? (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Chưa có dữ liệu</div>
+              <div className="h-72 mb-8 border border-gray-200 rounded-lg p-4 bg-white">
+                {chartType === 'line' ? (
+                  <SalesLineChart
+                    data={reportData.sales.map(s => ({...s, orders: showOrders ? s.orders : 0}))}
+                    currencyFormatter={formatCurrency}
+                    height={260}
+                  />
                 ) : (
-                  <div className="flex h-full items-end space-x-2">
-                    {(() => {
-                      const maxTotal = Math.max(...reportData.sales.map(s => s.total), 1);
-                      return reportData.sales.map((day, index) => {
-                        const height = (day.total / maxTotal) * 100; // scale theo max thực tế
-                        return (
-                          <div key={index} className="flex flex-col items-center flex-1">
-                            <div
-                              className="bg-primary-500 hover:bg-primary-600 rounded-t w-full transition-all duration-200"
-                              style={{ height: `${height}%` }}
-                              title={`${formatCurrency(day.total)} - ${day.orders} đơn hàng`}
-                            ></div>
-                            <div className="text-xs mt-2 text-gray-600">
-                              {formatDate(day.date)}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
+                  <SalesBarChart
+                    data={reportData.sales.map(s => ({...s, orders: showOrders ? s.orders : 0}))}
+                    currencyFormatter={formatCurrency}
+                    height={260}
+                  />
                 )}
               </div>
 

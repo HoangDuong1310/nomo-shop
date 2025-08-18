@@ -10,7 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { category } = req.query;
     
-    let query = 'SELECT * FROM products';
+  // Explicit select to avoid confusion & ensure sale_price present
+  let query = 'SELECT id, name, description, price, sale_price, image, category_id, stock_quantity, is_featured, is_active, created_at, updated_at FROM products';
     let values: any[] = [];
     
     if (category && category !== 'all') {
@@ -18,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       values.push(category);
     }
     
-    query += ' ORDER BY name';
+  query += ' ORDER BY is_featured DESC, created_at DESC';
     
     const products = await executeQuery({
       query,

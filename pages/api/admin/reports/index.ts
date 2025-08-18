@@ -44,20 +44,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Lấy tham số khoảng thời gian từ query
-    const { range = 'week' } = req.query;
-    
-    // Cấu hình khoảng thời gian cho các truy vấn
-    let dateFilter;
-    if (range === 'week') {
-      dateFilter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-    } else if (range === 'month') {
-      dateFilter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
-    } else if (range === 'year') {
-      dateFilter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)';
-    } else {
-      dateFilter = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-    }
+  // Lấy tham số khoảng thời gian từ query
+  const { range = 'week' } = req.query;
+
+  // Chuẩn hóa số ngày dựa vào khoảng thời gian
+  const rangeMap: Record<string, number> = { week: 7, month: 30, year: 365 };
+  const intervalDays = rangeMap[String(range)] || 7;
+
+  // Bộ lọc dùng cho truy vấn chỉ có 1 bảng (orders)
+  const dateFilter = `AND created_at >= DATE_SUB(NOW(), INTERVAL ${intervalDays} DAY)`;
+  // Bộ lọc dùng cho truy vấn có join bảng orders với alias 'o' để tránh mơ hồ
+  const orderDateFilter = `AND o.created_at >= DATE_SUB(NOW(), INTERVAL ${intervalDays} DAY)`;
 
     // Lấy dữ liệu bán hàng theo ngày
     const salesData = await executeQuery({
@@ -85,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         FROM order_items oi
         JOIN products p ON oi.product_id = p.id
         JOIN orders o ON oi.order_id = o.id
-        WHERE 1=1 ${dateFilter}
+        WHERE 1=1 ${orderDateFilter}
         GROUP BY p.id, p.name
         ORDER BY revenue DESC
         LIMIT 10

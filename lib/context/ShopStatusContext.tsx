@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from './AuthContext';
 
 interface ShopStatus {
   isOpen: boolean;
@@ -35,25 +37,26 @@ export const ShopStatusProvider = ({ children }: ShopStatusProviderProps) => {
   const [shopStatus, setShopStatus] = useState<ShopStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showOverlay, setShowOverlay] = useState<boolean>(false);
+  const router = useRouter();
+  const { user } = useAuth();
 
   const fetchShopStatus = async () => {
     try {
       const response = await fetch('/api/shop/status');
       const data = await response.json();
-      
+
       setShopStatus(data);
-      
-      // Show overlay if shop is closed or has special notification
+
+      // Luôn hiển thị overlay khi đóng ngoại trừ admin hoặc route /admin
       if (!data.isOpen && (data.status === 'closed' || data.status === 'special_notification')) {
-        // Check if user has dismissed overlay today
-        const dismissedToday = localStorage.getItem(`shop-overlay-dismissed-${new Date().toDateString()}`);
-        if (!dismissedToday) {
-          setShowOverlay(true);
-        }
+        const isAdminRoute = router.pathname.startsWith('/admin');
+        const isAuthRoute = router.pathname.startsWith('/auth');
+        const isAdminUser = user?.role === 'admin';
+        setShowOverlay(!(isAdminRoute || isAuthRoute || isAdminUser));
       } else {
         setShowOverlay(false);
       }
-      
+
     } catch (error) {
       console.error('Error fetching shop status:', error);
       // Fallback: assume shop is open
@@ -63,6 +66,7 @@ export const ShopStatusProvider = ({ children }: ShopStatusProviderProps) => {
         message: 'Cửa hàng đang hoạt động',
         currentTime: new Date().toISOString()
       });
+      setShowOverlay(false);
     } finally {
       setLoading(false);
     }
@@ -87,15 +91,31 @@ export const ShopStatusProvider = ({ children }: ShopStatusProviderProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle overlay dismiss
+  // Disable dismiss when shop đóng: chỉ cho phép tắt nếu mở lại
   const handleSetShowOverlay = (show: boolean) => {
-    setShowOverlay(show);
-    
-    if (!show && shopStatus && !shopStatus.isOpen) {
-      // Store dismissal for today
-      localStorage.setItem(`shop-overlay-dismissed-${new Date().toDateString()}`, 'true');
+    if (shopStatus && !shopStatus.isOpen) {
+      // Cho phép tắt nếu là admin hoặc trong admin route
+  const isAdminRoute = router.pathname.startsWith('/admin');
+  const isAuthRoute = router.pathname.startsWith('/auth');
+  const isAdminUser = user?.role === 'admin';
+  if (!(isAdminRoute || isAuthRoute || isAdminUser)) {
+        setShowOverlay(true);
+        return;
+      }
     }
+    setShowOverlay(show);
   };
+
+  // Re-evaluate overlay khi thay đổi user hoặc route
+  useEffect(() => {
+    if (!shopStatus) return;
+    if (!shopStatus.isOpen) {
+      const isAdminRoute = router.pathname.startsWith('/admin');
+      const isAuthRoute = router.pathname.startsWith('/auth');
+      const isAdminUser = user?.role === 'admin';
+      setShowOverlay(!(isAdminRoute || isAuthRoute || isAdminUser));
+    }
+  }, [user, router.pathname]);
 
   return (
     <ShopStatusContext.Provider 

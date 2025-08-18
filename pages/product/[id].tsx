@@ -210,11 +210,12 @@ const Product = ({ product }: ProductProps) => {
               <div className="relative bg-gray-50">
                 <div className="aspect-square relative overflow-hidden">
                   <Image
-                    src={product.image || 'https://via.placeholder.com/600x600/f8f9fa/6c757d?text=Chưa+có+hình+ảnh'}
+                    src={product.image || '/images/placeholder.svg'}
                     alt={product.name}
                     fill
                     className="object-cover hover:scale-105 transition-transform duration-700"
                     priority
+                    sizes="(max-width: 1024px) 100vw, 600px"
                   />
                   {/* Image overlay with gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />

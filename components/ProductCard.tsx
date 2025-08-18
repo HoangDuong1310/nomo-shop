@@ -43,10 +43,11 @@ const ProductCard = ({ id, name, price, sale_price, image, description }: Produc
       <div className="card h-full flex flex-col">
         <div className="relative pt-[75%] overflow-hidden">
           <Image
-            src={image || 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=No+Image'}
+            src={image || '/images/placeholder.svg'}
             alt={name}
             fill
             className="object-cover transition-transform duration-300 hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 400px"
           />
         </div>
         <div className="p-4 flex flex-col flex-grow">
