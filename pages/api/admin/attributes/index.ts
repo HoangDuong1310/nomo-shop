@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 import { getAllAttributes } from '../../../../lib/attributes';
 import { v4 as uuidv4 } from 'uuid';
 

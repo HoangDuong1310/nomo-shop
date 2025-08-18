@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { verifyToken } from '../../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 import { executeQuery } from '../../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

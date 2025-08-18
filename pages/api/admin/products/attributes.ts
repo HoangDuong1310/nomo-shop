@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 import { assignAttributesToProduct, getAllAttributes, getProductAttributes } from '../../../../lib/attributes';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 
 interface StoreSettings {
   store_name: string;

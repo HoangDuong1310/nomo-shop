@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
-import { getTokenFromRequest } from '../../../lib/auth-utils';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
