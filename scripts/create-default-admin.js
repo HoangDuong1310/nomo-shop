@@ -1,7 +1,10 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-require('dotenv').config({ path: '.env.local' });
+const { loadEnvConfig } = require('./utils/env-loader');
+
+// Load environment config
+loadEnvConfig();
 
 async function createDefaultAdmin() {
   let connection;

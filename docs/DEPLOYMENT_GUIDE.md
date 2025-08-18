@@ -43,12 +43,21 @@ npm run seed-demo     # Demo data only
 
 ### 3. ⚙️ ENVIRONMENT CONFIG
 ```bash
-# Tạo file .env.local
+# 🔧 DEVELOPMENT (local)
 cp .env.example .env.local
-
-# Cập nhật các biến môi trường:
 nano .env.local
+
+# 🚀 PRODUCTION (server)  
+cp .env.example .env
+nano .env
 ```
+
+**📝 Environment File Priority:**
+1. `.env.local` (development, ignored by git)
+2. `.env` (production, can be committed)  
+3. Default values (if no env file found)
+
+The `npm run setup` command will automatically detect and use the appropriate environment file.
 
 ### 4. 📦 INSTALL & DEPLOY
 ```bash
@@ -121,28 +130,54 @@ pm2 startup
 - `package.json` - Dependencies
 - Toàn bộ source code (trừ node_modules, .next)
 
-### Cấu hình .env.local:
+### Cấu hình Environment Variables:
+
+**📁 For PRODUCTION (.env):**
 ```env
 # Database
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=your_password
+DB_PASSWORD=your_production_password
 DB_DATABASE=cloudshop
 
-# NextAuth
-NEXTAUTH_URL=http://your-domain.com
-NEXTAUTH_SECRET=your-secret-key
+# Application
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=your-production-secret-key
 
-# Email (nếu dùng)
+# Email (production SMTP)
 SMTP_HOST=your-smtp-host
 SMTP_PORT=587
-SMTP_USER=your-email
-SMTP_PASS=your-password
+SMTP_USER=your-production-email
+SMTP_PASS=your-production-password
 
-# Payment (VNPay)
-VNPAY_TMN_CODE=your-vnpay-code
-VNPAY_SECRET_KEY=your-vnpay-secret
+# Payment (VNPay production)
+VNPAY_TMN_CODE=your-production-vnpay-code
+VNPAY_SECRET_KEY=your-production-vnpay-secret
+```
+
+**📁 For DEVELOPMENT (.env.local):**
+```env
+# Database (local)
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_local_password
+DB_DATABASE=cloudshop_dev
+
+# Application (local)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-dev-secret-key
+
+# Email (test SMTP or development)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-test-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Payment (VNPay sandbox)
+VNPAY_TMN_CODE=your-sandbox-vnpay-code
+VNPAY_SECRET_KEY=your-sandbox-vnpay-secret
 ```
 
 ---

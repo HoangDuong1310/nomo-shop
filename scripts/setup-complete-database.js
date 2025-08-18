@@ -1,5 +1,8 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config({ path: '.env.local' });
+const { loadEnvConfig } = require('./utils/env-loader');
+
+// Load environment config (sẽ tự động chọn .env.local hoặc .env)
+loadEnvConfig();
 
 async function setupCompleteDatabase() {
   let connection;
