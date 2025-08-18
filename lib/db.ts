@@ -6,14 +6,14 @@ let pool: mysql.Pool | null = null;
 function createPool() {
   if (pool) return pool;
   
-  const dbName = process.env.MYSQL_DATABASE || 'cloudshop';
+  const dbName = process.env.DB_DATABASE || 'cloudshop';
   
   pool = mysql.createPool({
-    host: process.env.MYSQL_HOST || 'localhost',
-    port: parseInt(process.env.MYSQL_PORT || '3306'),
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '3306'),
     database: dbName,
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || '',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
     waitForConnections: true,
     connectionLimit: 3,
     queueLimit: 0
@@ -24,14 +24,14 @@ function createPool() {
 
 // Hàm để đảm bảo database tồn tại (chạy một lần duy nhất)
 async function ensureDatabaseExists() {
-  const dbName = process.env.MYSQL_DATABASE || 'cloudshop';
+  const dbName = process.env.DB_DATABASE || 'cloudshop';
   
   // Tạo connection tạm thời để tạo database
   const tempConnection = await mysql.createConnection({
-    host: process.env.MYSQL_HOST || 'localhost',
-    port: parseInt(process.env.MYSQL_PORT || '3306'),
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || '',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '3306'),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
   });
   
   try {
