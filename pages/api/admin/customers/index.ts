@@ -62,66 +62,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       values: [],
     });
 
-    // Tạo câu truy vấn SQL cơ bản cho danh sách khách hàng
-    let query = `
+    // WHERE động
+    let whereClause = "WHERE u.role = 'user'";
+    const whereParams: any[] = [];
+    if (search) {
+      whereClause += ' AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)';
+      const sv = `%${search}%`;
+      whereParams.push(sv, sv, sv);
+    }
+
+    // Query đếm
+    const countQuery = `SELECT COUNT(*) as total FROM users u ${whereClause}`;
+    const totalResult = await executeQuery({ query: countQuery, values: whereParams });
+
+    const safeLimit = Math.min(Math.max(limit,1),100);
+    const safeOffset = Math.max(offset,0);
+
+    // Query dữ liệu (kèm subqueries)
+    const dataQuery = `
       SELECT 
-        u.*,
+        u.*, 
         (SELECT COUNT(*) FROM orders WHERE user_id = u.id) as orders_count,
         (SELECT COALESCE(SUM(total), 0) FROM orders WHERE user_id = u.id) as total_spent
       FROM users u
-      WHERE u.role = 'user'
+      ${whereClause}
+      ORDER BY u.created_at DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
-    
-    // Array để lưu các giá trị tham số cho câu truy vấn
-    const queryParams: any[] = [];
+    const users = await executeQuery({ query: dataQuery, values: whereParams });
 
-    // Thêm điều kiện tìm kiếm
-    if (search) {
-      query += ` AND (
-        u.name LIKE ? 
-        OR u.email LIKE ? 
-        OR u.phone LIKE ?
-      )`;
-      const searchValue = `%${search}%`;
-      queryParams.push(searchValue, searchValue, searchValue);
-    }
-
-    // Câu truy vấn đếm tổng số khách hàng theo điều kiện tìm kiếm
-    let countQuery = `
-      SELECT COUNT(*) as total
-      FROM users u
-      WHERE u.role = 'user'
-    `;
-    
-    if (search) {
-      countQuery += ` AND (
-        u.name LIKE ? 
-        OR u.email LIKE ? 
-        OR u.phone LIKE ?
-      )`;
-    }
-
-    // Thêm phân trang và sắp xếp vào câu truy vấn chính
-    query += ' ORDER BY u.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(limit, offset);
-
-    // Thực hiện các truy vấn
-    const totalResult = await executeQuery({
-      query: countQuery,
-      values: search ? [
-        `%${search}%`, 
-        `%${search}%`, 
-        `%${search}%`
-      ] : [],
-    });
-
-    const users = await executeQuery({
-      query,
-      values: queryParams,
-    });
-
-    // Lấy tổng số khách hàng từ kết quả đếm
-    const total = (totalResult as any[])[0].total || 0;
+    const totalRow = (totalResult as any[])[0];
+    const total = totalRow ? (totalRow as any).total : 0;
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedUsers = JSON.parse(JSON.stringify(users));

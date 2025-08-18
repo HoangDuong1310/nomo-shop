@@ -50,56 +50,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const search = req.query.search ? String(req.query.search) : '';
     const category = req.query.category ? String(req.query.category) : '';
 
-    // Tạo câu truy vấn SQL cơ bản
-    let query = `
+    // WHERE động & params cơ bản
+    let whereClause = 'WHERE 1=1';
+    const baseParams: any[] = [];
+
+    if (search) {
+      whereClause += ' AND (p.name LIKE ? OR p.description LIKE ?)';
+      const sv = `%${search}%`;
+      baseParams.push(sv, sv);
+    }
+    if (category) {
+      whereClause += ' AND p.category_id = ?';
+      baseParams.push(category);
+    }
+
+    const countQuery = `SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.category_id = c.id ${whereClause}`;
+    const totalResult = await executeQuery({
+      query: countQuery,
+      values: baseParams,
+    });
+
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safeOffset = Math.max(offset, 0);
+
+    const dataQuery = `
       SELECT p.*, c.name AS category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-      WHERE 1=1
+      ${whereClause}
+      ORDER BY p.is_featured DESC, p.created_at DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
-    
-    // Array để lưu các giá trị tham số cho câu truy vấn
-    const queryParams: any[] = [];
-
-    // Thêm điều kiện tìm kiếm
-    if (search) {
-      query += ` AND (
-        p.name LIKE ? 
-        OR p.description LIKE ?
-      )`;
-      const searchValue = `%${search}%`;
-      queryParams.push(searchValue, searchValue);
-    }
-
-    // Thêm điều kiện lọc theo danh mục
-    if (category) {
-      query += ' AND p.category_id = ?';
-      queryParams.push(category);
-    }
-
-    // Câu truy vấn đếm tổng số sản phẩm theo điều kiện tìm kiếm
-    let countQuery = query.replace(
-      'SELECT p.*, c.name AS category_name',
-      'SELECT COUNT(*) as total'
-    );
-
-    // Thêm phân trang và sắp xếp vào câu truy vấn chính
-    query += ' ORDER BY p.is_featured DESC, p.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(limit, offset);
-
-    // Thực hiện cả hai truy vấn
-    const totalResult = await executeQuery({
-      query: countQuery,
-      values: [...queryParams.slice(0, queryParams.length - 2)], // Không cần LIMIT và OFFSET cho câu đếm
-    });
 
     const products = await executeQuery({
-      query,
-      values: queryParams,
+      query: dataQuery,
+      values: baseParams,
     });
 
-    // Lấy tổng số sản phẩm từ kết quả đếm
-    const total = (totalResult as any[])[0].total || 0;
+    const totalRow = (totalResult as any[])[0];
+    const total = totalRow ? (totalRow as any).total : 0;
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedProducts = JSON.parse(JSON.stringify(products));

@@ -50,58 +50,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const search = req.query.search ? String(req.query.search) : '';
     const status = req.query.status ? String(req.query.status) : '';
 
-    // Tạo câu truy vấn SQL cơ bản
-    let query = `
+    // Xây dựng phần WHERE động và tham số (chưa gồm LIMIT/OFFSET)
+    let whereClause = 'WHERE 1=1';
+    const baseParams: any[] = [];
+
+    if (search) {
+      whereClause += ` AND (o.id LIKE ? OR o.full_name LIKE ? OR o.phone LIKE ? OR o.address LIKE ?)`;
+      const sv = `%${search}%`;
+      baseParams.push(sv, sv, sv, sv);
+    }
+
+    if (status) {
+      whereClause += ' AND o.order_status = ?';
+      baseParams.push(status);
+    }
+
+    // Câu truy vấn đếm
+    const countQuery = `SELECT COUNT(*) as total FROM orders o ${whereClause}`;
+    const totalResult = await executeQuery({
+      query: countQuery,
+      values: baseParams,
+    });
+
+    // Bảo đảm limit/offset hợp lệ và tránh giá trị bất thường
+    const safeLimit = Math.min(Math.max(limit, 1), 100); // giới hạn tối đa 100 / trang
+    const safeOffset = Math.max(offset, 0);
+
+    // Câu truy vấn lấy dữ liệu
+    const dataQuery = `
       SELECT o.id, o.full_name, o.phone, o.total, o.order_status,
              o.payment_status, o.payment_method, o.created_at
       FROM orders o
-      WHERE 1=1
+      ${whereClause}
+      ORDER BY o.created_at DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
-    
-    // Array để lưu các giá trị tham số cho câu truy vấn
-    const queryParams: any[] = [];
 
-    // Thêm điều kiện tìm kiếm
-    if (search) {
-      query += ` AND (
-        o.id LIKE ? 
-        OR o.full_name LIKE ? 
-        OR o.phone LIKE ? 
-        OR o.address LIKE ?
-      )`;
-      const searchValue = `%${search}%`;
-      queryParams.push(searchValue, searchValue, searchValue, searchValue);
-    }
-
-    // Thêm điều kiện lọc theo trạng thái
-    if (status) {
-      query += ' AND o.order_status = ?';
-      queryParams.push(status);
-    }
-
-    // Câu truy vấn đếm tổng số đơn hàng theo điều kiện tìm kiếm
-    let countQuery = query.replace(
-      'SELECT o.id, o.full_name, o.phone, o.total, o.order_status, o.payment_status, o.payment_method, o.created_at',
-      'SELECT COUNT(*) as total'
-    );
-
-    // Thêm phân trang vào câu truy vấn chính
-    query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(limit, offset);
-
-    // Thực hiện cả hai truy vấn
-    const totalResult = await executeQuery({
-      query: countQuery,
-      values: [...queryParams.slice(0, queryParams.length - 2)], // Không cần LIMIT và OFFSET cho câu đếm
-    });
-
+    // Lưu ý: Inject trực tiếp LIMIT/OFFSET (đã sanitize) để tránh lỗi một số version MySQL với placeholder LIMIT ? OFFSET ?
     const orders = await executeQuery({
-      query,
-      values: queryParams,
+      query: dataQuery,
+      values: baseParams,
     });
 
-    // Lấy tổng số đơn hàng từ kết quả đếm
-    const total = (totalResult as any[])[0].total || 0;
+    const totalRow = (totalResult as any[])[0];
+    const total = totalRow ? (totalRow as any).total : 0;
 
     // Xử lý dữ liệu để tránh lỗi serialize Date
     const serializedOrders = JSON.parse(JSON.stringify(orders));
