@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { verifyToken } from '../../../../lib/auth';
+import { getTokenFromRequest } from '../../../lib/auth-utils';
 import { executeQuery } from '../../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(404).json({ message: 'Not found' });
   }
 
-  const token = req.cookies.auth_token;
+  const token = getTokenFromRequest(req);
   
   if (!token) {
     return res.status(401).json({

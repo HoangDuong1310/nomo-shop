@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
+import { getTokenFromRequest } from '../../../lib/auth-utils';
 import { EmailService } from '../../../../lib/email-service';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -10,8 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Lấy token từ cookie
-    const token = req.cookies.auth_token;
+    // Lấy token từ cookie hoặc Authorization header
+    const token = getTokenFromRequest(req);
     
     // Nếu không có token
     if (!token) {

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth';
+import { getTokenFromRequest } from '../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Chỉ chấp nhận phương thức GET
@@ -9,8 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Lấy token từ cookie
-    const token = req.cookies.auth_token;
+    // Lấy token từ cookie hoặc Authorization header
+    const token = getTokenFromRequest(req);
     
     // Nếu không có token
     if (!token) {
@@ -43,9 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Lấy tham số phân trang, tìm kiếm, lọc
-    const page = parseInt(String(req.query.page)) || 1;
-    const limit = parseInt(String(req.query.limit)) || 10;
+    // Lấy tham số phân trang với validation mạnh mẽ
+    const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(String(req.query.limit)) || 10));
     const offset = (page - 1) * limit;
     const search = req.query.search ? String(req.query.search) : '';
     const status = req.query.status ? String(req.query.status) : '';
