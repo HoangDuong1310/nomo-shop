@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
-  const token = req.cookies.auth_token;
+  const token = getTokenFromRequest(req);
   
   // Nếu không có token
   if (!token) {

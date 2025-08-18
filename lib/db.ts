@@ -58,6 +58,43 @@ export async function executeQuery({
   }
 }
 
+// Special function for queries with LIMIT and OFFSET
+// Uses query() instead of execute() to avoid prepared statement issues with LIMIT/OFFSET
+export async function executeQueryWithPagination({
+  query,
+  values = [],
+  limit,
+  offset,
+}: {
+  query: string;
+  values?: any[];
+  limit: number;
+  offset: number;
+}) {
+  try {
+    const currentPool = createPool();
+    
+    // Ensure limit and offset are integers to prevent SQL injection
+    const safeLimit = parseInt(String(limit));
+    const safeOffset = parseInt(String(offset));
+    
+    if (isNaN(safeLimit) || isNaN(safeOffset) || safeLimit < 0 || safeOffset < 0) {
+      throw new Error('Invalid limit or offset values');
+    }
+    
+    // Append LIMIT and OFFSET directly to the query (safe because they're validated integers)
+    const paginatedQuery = `${query} LIMIT ${safeLimit} OFFSET ${safeOffset}`;
+    
+    // Use execute for other parameters (for prepared statement safety)
+    // but with LIMIT and OFFSET already interpolated
+    const [results] = await currentPool.execute(paginatedQuery, values);
+    return results;
+  } catch (error) {
+    console.error('Database error:', error);
+    throw error;
+  }
+}
+
 // Hàm để đóng pool connection (để cleanup)
 export async function closePool() {
   if (pool) {

@@ -35,7 +35,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Kiểm tra người dùng đã đăng nhập chưa khi component được mount
     const checkLoggedIn = async () => {
       try {
-        const res = await fetch('/api/auth/me');
+        const token = localStorage.getItem('token');
+        const headers: any = {};
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        
+        const res = await fetch('/api/auth/me', { headers });
         
         if (res.ok) {
           const data = await res.json();

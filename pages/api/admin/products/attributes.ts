@@ -1,11 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
 import { verifyToken } from '../../../../lib/auth';
+import { getTokenFromRequest } from '../../../../lib/auth-utils';
 import { assignAttributesToProduct, getAllAttributes, getProductAttributes } from '../../../../lib/attributes';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const token = req.cookies.auth_token;
+    const token = getTokenFromRequest(req);
     if (!token) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
