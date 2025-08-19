@@ -16,17 +16,23 @@ async function fetchCachedShopStatus(): Promise<{ isOpen: boolean; force?: boole
 export async function middleware(request: NextRequest) {
   // Rate limiting cho API endpoints
   const pathname = request.nextUrl.pathname;
-  
-  // Chặn debug endpoints trong production
-  if (process.env.NODE_ENV === 'production') {
-    const debugPaths = ['/api/debug', '/api/debug-auth', '/api/debug-orders', '/api/test-db'];
-    if (debugPaths.some(path => pathname.startsWith(path))) {
-      return new NextResponse('Not Found', { status: 404 });
+  // 1. Tránh vòng lặp vô hạn: middleware hiện tại fetch /api/shop/status => bản thân nó lại chạy middleware
+  //    Nếu không chặn sẽ khiến mọi API (đặc biệt multipart upload) bị treo trên server.
+  // 2. Với các API (trừ vài endpoint debug cần chặn) ta có thể bỏ qua toàn bộ logic shop-status để giảm latency.
+  if (pathname.startsWith('/api/')) {
+    // Chặn debug endpoints trong production (giữ nguyên hành vi cũ)
+    if (process.env.NODE_ENV === 'production') {
+      const debugPaths = ['/api/debug', '/api/debug-auth', '/api/debug-orders', '/api/test-db'];
+      if (debugPaths.some(path => pathname.startsWith(path))) {
+        return new NextResponse('Not Found', { status: 404 });
+      }
     }
+    // Bỏ qua fetch shop status & các redirect khác cho API để tránh recursion và treo upload
+    return NextResponse.next();
   }
-
+  
   // Block public interactive pages if shop closed (not admin, not assets, not status APIs)
-  if (!pathname.startsWith('/admin') && !pathname.startsWith('/_next') && !pathname.startsWith('/api/shop') && !pathname.startsWith('/api/auth') && !pathname.startsWith('/api/products') && !pathname.startsWith('/images') && !pathname.startsWith('/public')) {
+  if (!pathname.startsWith('/admin') && !pathname.startsWith('/_next') && !pathname.startsWith('/api/shop') && !pathname.startsWith('/images') && !pathname.startsWith('/public')) {
     const status = await fetchCachedShopStatus();
     if (status && !status.isOpen) {
       // Allow viewing product pages & menu (read-only) but block checkout/cart/order APIs
