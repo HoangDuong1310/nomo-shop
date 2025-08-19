@@ -16,6 +16,7 @@ import {
   FaStore
 } from 'react-icons/fa';
 import { useAuth } from '../../lib/context/AuthContext';
+import { useStoreInfo } from '../../lib/context/StoreInfoContext';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -27,6 +28,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const { storeInfo } = useStoreInfo();
 
   // Kiểm tra quyền admin
   useEffect(() => {
@@ -136,7 +138,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       >
         <div className="flex items-center justify-between h-16 px-6 bg-primary-600">
           <Link href="/admin" className="text-xl font-bold text-white">
-            Cloud Shop Admin
+            {(storeInfo.store_name || 'Cloud Shop') + ' Admin'}
           </Link>
           <button 
             onClick={toggleSidebar}
@@ -226,4 +228,4 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   );
 };
 
-export default AdminLayout; 
+export default AdminLayout;

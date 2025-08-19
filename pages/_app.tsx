@@ -6,6 +6,7 @@ import { CartProvider } from '../lib/context/CartContext'
 import { AuthProvider } from '../lib/context/AuthContext'
 import { ShopStatusProvider, useShopStatus } from '../lib/context/ShopStatusContext'
 import ShopStatusOverlay from '../components/ShopStatusOverlay'
+import { StoreInfoProvider } from '../lib/context/StoreInfoContext'
 
 const AppContent = ({ Component, pageProps }: AppProps) => {
   // Nội dung ứng dụng chính. Overlay được render độc lập trong provider.
@@ -17,19 +18,21 @@ const RootApp = (props: AppProps) => {
     <AuthProvider>
       <CartProvider>
         <ShopStatusProvider>
-          <AppContent {...props} />
-          <ShopStatusOverlay />
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
+          <StoreInfoProvider>
+            <AppContent {...props} />
+            <ShopStatusOverlay />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </StoreInfoProvider>
         </ShopStatusProvider>
       </CartProvider>
     </AuthProvider>
@@ -38,4 +41,4 @@ const RootApp = (props: AppProps) => {
 
 function MyApp(props: AppProps) { return <RootApp {...props} /> }
 
-export default MyApp 
+export default MyApp

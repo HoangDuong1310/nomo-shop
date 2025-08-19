@@ -17,7 +17,8 @@
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop cloud-shop",
     "pm2:restart": "pm2 restart cloud-shop",
-    "pm2:delete": "pm2 delete cloud-shop"
+    "pm2:delete": "pm2 delete cloud-shop",
+    "reset:products": "node scripts/reset-and-add-products.js"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",

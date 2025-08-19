@@ -42,13 +42,22 @@ const ProductCard = ({ id, name, price, sale_price, image, description }: Produc
     <Link href={`/product/${id}`} className="block h-full">
       <div className="card h-full flex flex-col">
         <div className="relative pt-[75%] overflow-hidden">
-          <Image
-            src={image || '/images/placeholder.svg'}
-            alt={name}
-            fill
-            className="object-cover transition-transform duration-300 hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 400px"
-          />
+          {image && image.startsWith('/uploads/') ? (
+            <img
+              src={image}
+              alt={name}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <Image
+              src={image || '/images/placeholder.svg'}
+              alt={name}
+              fill
+              className="object-cover transition-transform duration-300 hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 400px"
+            />
+          )}
         </div>
         <div className="p-4 flex flex-col flex-grow">
           <h3 className="font-medium text-lg mb-1 line-clamp-1">{name}</h3>

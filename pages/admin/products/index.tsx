@@ -276,26 +276,43 @@ const ProductsAdminPage: NextPage = () => {
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 relative bg-gray-100">
-                          {product.image ? (
-                            <Image
-                              src={product.image}
-                              alt={product.name}
-                              fill
-                              sizes="56px"
-                              className="object-cover object-center"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-gray-400">
-                              No image
-                            </div>
-                          )}
+                          {(() => {
+                            const img = product.image;
+                            const resolved = (!img || img.includes('placeholder-drink') || img.includes('placeholder-food'))
+                              ? '/images/placeholder.svg'
+                              : img;
+                            if (!resolved) {
+                              return (
+                                <div className="flex h-full w-full items-center justify-center text-gray-400">No image</div>
+                              );
+                            }
+                            if (resolved.startsWith('/uploads/')) {
+                              return (
+                                <img
+                                  src={resolved}
+                                  alt={product.name}
+                                  className="absolute inset-0 w-full h-full object-cover object-center"
+                                  loading="lazy"
+                                />
+                              );
+                            }
+                            return (
+                              <Image
+                                src={resolved}
+                                alt={product.name}
+                                fill
+                                sizes="56px"
+                                className="object-cover object-center"
+                              />
+                            );
+                          })()}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 flex items-center">
                             {product.name}
-                            {product.is_featured && (
+                            {product.is_featured ? (
                               <FaStar className="ml-1 text-yellow-400" title="Sản phẩm nổi bật" />
-                            )}
+                            ) : null}
                           </div>
                           <div className="text-sm text-gray-500 max-w-xs truncate">{product.description}</div>
                         </div>

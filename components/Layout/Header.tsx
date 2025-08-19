@@ -12,6 +12,7 @@ import {
   FaCog
 } from 'react-icons/fa';
 import { useAuth } from '../../lib/context/AuthContext';
+import { useStoreInfo } from '../../lib/context/StoreInfoContext';
 
 type HeaderProps = {
   cartItemsCount?: number;
@@ -20,6 +21,7 @@ type HeaderProps = {
 const Header = ({ cartItemsCount = 0 }: HeaderProps) => {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
+  const { storeInfo } = useStoreInfo();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -58,7 +60,7 @@ const Header = ({ cartItemsCount = 0 }: HeaderProps) => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold text-primary-600">
-            Cloud Shop
+            {storeInfo.store_name || 'Cloud Shop'}
           </Link>
 
           {/* Desktop Navigation */}
@@ -203,4 +205,4 @@ const Header = ({ cartItemsCount = 0 }: HeaderProps) => {
   );
 };
 
-export default Header; 
+export default Header;

@@ -1,15 +1,18 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
+import { useStoreInfo } from '../lib/context/StoreInfoContext'
 import { useState, useEffect } from 'react'
 import { FaShoppingCart, FaMapMarkerAlt, FaQrcode } from 'react-icons/fa'
 import Link from 'next/link'
 
 const Home: NextPage = () => {
+  const { storeInfo } = useStoreInfo();
+  const title = `${storeInfo.store_name || 'Cloud Shop'} - Đặt món trực tuyến qua mã QR`;
   return (
     <div>
       <Head>
-        <title>Cloud Shop - Đặt món trực tuyến qua mã QR</title>
-        <meta name="description" content="Đặt món trực tuyến nhanh chóng và tiện lợi qua mã QR" />
+        <title>{title}</title>
+        <meta name="description" content={storeInfo.store_description || 'Đặt món trực tuyến nhanh chóng và tiện lợi qua mã QR'} />
       </Head>
 
       <main className="min-h-screen">
@@ -117,23 +120,23 @@ const Home: NextPage = () => {
         <div className="container-custom">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">Cloud Shop</h3>
-              <p className="text-gray-400">Đặt món trực tuyến qua mã QR, giao hàng nhanh chóng và tiện lợi.</p>
+              <h3 className="text-xl font-bold mb-4">{storeInfo.store_name || 'Cloud Shop'}</h3>
+              <p className="text-gray-400">{storeInfo.store_description || 'Đặt món trực tuyến qua mã QR, giao hàng nhanh chóng và tiện lợi.'}</p>
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Liên hệ</h3>
-              <p className="text-gray-400">Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</p>
-              <p className="text-gray-400">SĐT: 0123 456 789</p>
-              <p className="text-gray-400">Email: info@cloudshop.com</p>
+              <p className="text-gray-400">Địa chỉ: {storeInfo.store_address || '123 Đường ABC, Quận XYZ, TP.HCM'}</p>
+              <p className="text-gray-400">SĐT: {storeInfo.store_phone || '0123 456 789'}</p>
+              <p className="text-gray-400">Email: {storeInfo.store_email || 'info@cloudshop.com'}</p>
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Giờ mở cửa</h3>
-              <p className="text-gray-400">Thứ 2 - Thứ 6: 8:00 - 22:00</p>
-              <p className="text-gray-400">Thứ 7 - Chủ nhật: 8:00 - 23:00</p>
+              <p className="text-gray-400">{storeInfo.store_hours || 'Thứ 2 - Thứ 6: 8:00 - 22:00'}</p>
+              {/* Có thể tách riêng weekend nếu muốn sau */}
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>© 2023 Cloud Shop. Tất cả các quyền được bảo lưu.</p>
+            <p>© {new Date().getFullYear()} {storeInfo.store_name || 'Cloud Shop'}. Tất cả các quyền được bảo lưu.</p>
           </div>
         </div>
       </footer>
@@ -141,4 +144,4 @@ const Home: NextPage = () => {
   )
 }
 
-export default Home 
+export default Home

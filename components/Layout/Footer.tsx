@@ -1,67 +1,30 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaFacebook, FaInstagram, FaTwitter, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
-
-interface StoreInfo {
-  store_name: string;
-  store_description: string;
-  store_address: string;
-  store_phone: string;
-  store_email: string;
-  store_hours: string;
-  store_website: string;
-}
+import { useStoreInfo } from '../../lib/context/StoreInfoContext';
 
 const Footer = () => {
-  const [storeInfo, setStoreInfo] = useState<StoreInfo>({
-    store_name: 'Cloud Shop',
-    store_description: 'Ứng dụng đặt món trực tuyến qua mã QR, giao hàng nhanh chóng trong bán kính 3km.',
-    store_address: '123 Đường ABC, Quận XYZ, TP.HCM',
-    store_phone: '0123 456 789',
-    store_email: 'info@cloudshop.com',
-    store_hours: 'T2-T6: 8:00 - 22:00, T7-CN: 8:00 - 23:00',
-    store_website: 'www.cloudshop.com'
-  });
+  const { storeInfo } = useStoreInfo();
 
-  useEffect(() => {
-    const fetchStoreInfo = async () => {
-      try {
-        const response = await fetch('/api/public/store-info');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.storeInfo) {
-            setStoreInfo(data.storeInfo);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching store info:', error);
-        // Sử dụng default values đã được set trong state
-      }
-    };
-
-    fetchStoreInfo();
-  }, []);
-
-  // Parse store hours để hiển thị đẹp hơn
-  const parseStoreHours = (hours: string) => {
-    // Ví dụ: "T2-T6: 8:00 - 22:00, T7-CN: 8:00 - 23:00"
-    const parts = hours.split(', ');
+  // parse hours fallback
+  const hours = storeInfo.store_hours || 'T2-T6: 8:00 - 22:00, T7-CN: 8:00 - 23:00';
+  const parseStoreHours = (hoursStr: string) => {
+    const parts = hoursStr.split(', ');
     return parts.map((part, index) => {
       const [days, time] = part.split(': ');
       return { days, time, key: index };
     });
   };
-
-  const storeHours = parseStoreHours(storeInfo.store_hours);
+  const storeHours = parseStoreHours(hours);
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container-custom py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-xl font-bold mb-4">{storeInfo.store_name}</h3>
+            <h3 className="text-xl font-bold mb-4">{storeInfo.store_name || 'Cloud Shop'}</h3>
             <p className="text-gray-400 mb-4">
-              {storeInfo.store_description}
+              {storeInfo.store_description || 'Ứng dụng đặt món trực tuyến qua mã QR, giao hàng nhanh chóng trong bán kính 3km.'}
             </p>
             <div className="flex space-x-4">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
@@ -114,15 +77,15 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <FaMapMarkerAlt className="text-primary-500 mt-1" />
-                <span className="text-gray-400">{storeInfo.store_address}</span>
+                <span className="text-gray-400">{storeInfo.store_address || '123 Đường ABC, Quận XYZ, TP.HCM'}</span>
               </li>
               <li className="flex items-center space-x-3">
                 <FaPhone className="text-primary-500" />
-                <span className="text-gray-400">{storeInfo.store_phone}</span>
+                <span className="text-gray-400">{storeInfo.store_phone || '0123 456 789'}</span>
               </li>
               <li className="flex items-center space-x-3">
                 <FaEnvelope className="text-primary-500" />
-                <span className="text-gray-400">{storeInfo.store_email}</span>
+                <span className="text-gray-400">{storeInfo.store_email || 'info@cloudshop.com'}</span>
               </li>
             </ul>
           </div>
@@ -147,7 +110,7 @@ const Footer = () => {
         <div className="container-custom py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-center md:text-left">
-              © {new Date().getFullYear()} {storeInfo.store_name}. Tất cả các quyền được bảo lưu.
+              © {new Date().getFullYear()} {storeInfo.store_name || 'Cloud Shop'}. Tất cả các quyền được bảo lưu.
             </p>
             <div className="mt-4 md:mt-0">
               <ul className="flex space-x-4 text-sm">
@@ -170,4 +133,4 @@ const Footer = () => {
   );
 };
 
-export default Footer; 
+export default Footer;
