@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth';
+import { getTokenFromRequest } from '../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Chỉ chấp nhận phương thức GET
@@ -10,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Lấy token từ cookie
-    const token = req.cookies.auth_token;
+  const token = getTokenFromRequest(req) || req.cookies.auth_token;
     
     // Nếu không có token
     if (!token) {

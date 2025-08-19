@@ -153,9 +153,9 @@ async function updateProduct(req: NextApiRequest, res: NextApiResponse, id: stri
         sale_price || null,
         image,
         category_id,
-        stock_quantity || 0,
-        is_featured || false,
-        is_active || true,
+        Number.isFinite(Number(stock_quantity)) ? Number(stock_quantity) : 0,
+        typeof is_featured === 'boolean' ? is_featured : !!is_featured,
+        typeof is_active === 'boolean' ? is_active : !!is_active,
         id
       ],
     });

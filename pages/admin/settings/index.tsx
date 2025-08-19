@@ -38,9 +38,13 @@ interface PaymentSettings {
   accept_cash: boolean;
   accept_bank_transfer: boolean;
   accept_credit_card: boolean;
+  accept_vnpay: boolean;
+  accept_direct_bank: boolean;
   bank_account_name: string;
   bank_account_number: string;
   bank_name: string;
+  bank_code?: string;
+  bank_template?: string;
 }
 
 interface Settings {
@@ -72,9 +76,13 @@ const SettingsPage: NextPage = () => {
       accept_cash: true,
       accept_bank_transfer: false,
       accept_credit_card: false,
+  accept_vnpay: true,
+  accept_direct_bank: false,
       bank_account_name: '',
       bank_account_number: '',
       bank_name: '',
+  bank_code: '',
+  bank_template: 'compact2',
     }
   });
 
@@ -508,9 +516,35 @@ const SettingsPage: NextPage = () => {
                         Chấp nhận thanh toán thẻ tín dụng/ghi nợ
                       </label>
                     </div>
+                    <div className="flex items-center">
+                      <input
+                        id="accept_vnpay"
+                        name="accept_vnpay"
+                        type="checkbox"
+                        checked={settings.payment.accept_vnpay}
+                        onChange={handleCheckboxChange}
+                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                      />
+                      <label htmlFor="accept_vnpay" className="ml-2 block text-sm text-gray-900">
+                        Chấp nhận VNPay (cổng thanh toán)
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="accept_direct_bank"
+                        name="accept_direct_bank"
+                        type="checkbox"
+                        checked={settings.payment.accept_direct_bank}
+                        onChange={handleCheckboxChange}
+                        className="h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                      />
+                      <label htmlFor="accept_direct_bank" className="ml-2 block text-sm text-gray-900">
+                        Chuyển khoản ngân hàng thủ công
+                      </label>
+                    </div>
                   </div>
 
-                  {settings.payment.accept_bank_transfer && (
+                  {(settings.payment.accept_bank_transfer || settings.payment.accept_direct_bank) && (
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-4 space-y-4">
                       <h3 className="font-medium text-gray-900">Thông tin tài khoản ngân hàng</h3>
                       
@@ -558,6 +592,38 @@ const SettingsPage: NextPage = () => {
                           placeholder="Nhập số tài khoản"
                         />
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="bank_code" className="block text-sm font-medium text-gray-700 mb-1">
+                            Mã ngân hàng (VietQR bank code)
+                          </label>
+                          <input
+                            type="text"
+                            id="bank_code"
+                            name="bank_code"
+                            value={settings.payment.bank_code || ''}
+                            onChange={handlePaymentInputChange}
+                            className="input-field w-full"
+                            placeholder="vd: vietinbank, vietcombank"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="bank_template" className="block text-sm font-medium text-gray-700 mb-1">
+                            Mẫu QR (template)
+                          </label>
+                          <input
+                            type="text"
+                            id="bank_template"
+                            name="bank_template"
+                            value={settings.payment.bank_template || ''}
+                            onChange={handlePaymentInputChange}
+                            className="input-field w-full"
+                            placeholder="compact2, compact, qr_only..."
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">URL VietQR mẫu: https://img.vietqr.io/image/&lt;bank_code&gt;-&lt;bank_account_number&gt;-&lt;template&gt;.png?amount=&lt;AMOUNT&gt;&addInfo=&lt;NOI_DUNG&gt;&accountName=&lt;TEN_TK&gt;</p>
                     </div>
                   )}
                 </div>

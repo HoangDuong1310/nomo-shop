@@ -298,6 +298,30 @@ async function setupCompleteDatabase() {
 
     console.log('✅ Product attributes system created');
 
+    // 4b. QR REDIRECTS SYSTEM
+    console.log('\n4️⃣ (b) Setting up QR redirects system...');
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS qr_redirects (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        slug VARCHAR(100) NOT NULL UNIQUE,
+        target_url TEXT NOT NULL,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        hit_count BIGINT NOT NULL DEFAULT 0,
+        last_hit_at DATETIME NULL,
+        updated_by VARCHAR(64) NULL,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed default 'card' slug if not exists
+    await connection.execute(`
+      INSERT INTO qr_redirects (slug, target_url) 
+      SELECT 'card', 'https://example.com/landing' 
+      WHERE NOT EXISTS (SELECT 1 FROM qr_redirects WHERE slug = 'card')
+    `);
+    console.log('✅ QR redirects system created');
+
     // 5. INSERT DEFAULT DATA
     console.log('\n5️⃣ Inserting default data...');
 
@@ -367,7 +391,7 @@ async function setupCompleteDatabase() {
       'first_order_discounts', 'product_variants', 'settings',
       'shop_operating_hours', 'shop_notifications', 'shop_email_notifications', 
       'shop_status_settings', 'email_logs', 'email_preferences',
-      'product_attributes', 'attribute_values'
+      'product_attributes', 'attribute_values', 'qr_redirects'
     ];
 
     console.log('📊 Database tables status:');

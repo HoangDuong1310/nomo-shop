@@ -15,7 +15,9 @@ import {
   FaStar,
   FaEye,
   FaExclamationTriangle,
-  FaCog
+  FaCog,
+  FaToggleOn,
+  FaToggleOff
 } from 'react-icons/fa';
 import AdminLayout from '../../../components/Layout/AdminLayout';
 import { toast } from 'react-toastify';
@@ -45,6 +47,7 @@ const ProductsAdminPage: NextPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -128,7 +131,25 @@ const ProductsAdminPage: NextPage = () => {
     setShowDeleteModal(true);
   };
 
-  // Handle delete product
+  // Handle delete product (legacy)
+  const handleToggleActive = async (product: Product) => {
+    setToggling(product.id);
+    try {
+      const res = await fetch('/api/admin/products/toggle-active', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: product.id })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Toggle failed');
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_active: data.is_active } : p));
+      toast.success(`${product.name} → ${data.is_active ? 'Đang bán' : 'Ngừng bán'}`);
+    } catch (e: any) {
+      toast.error(e.message || 'Không thể đổi trạng thái');
+    } finally {
+      setToggling(null);
+    }
+  };
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
     
@@ -349,15 +370,17 @@ const ProductsAdminPage: NextPage = () => {
                           <FaCog className="w-5 h-5" />
                         </Link>
                         <button
-                          onClick={() => confirmDelete(product)}
-                          className="text-red-600 hover:text-red-900"
-                          disabled={isDeleting === product.id}
-                          title="Xóa sản phẩm"
+                          onClick={() => handleToggleActive(product)}
+                          className={product.is_active ? 'text-green-600 hover:text-green-800' : 'text-gray-500 hover:text-gray-700'}
+                          disabled={toggling === product.id}
+                          title="Chuyển trạng thái nhanh"
                         >
-                          {isDeleting === product.id ? (
+                          {toggling === product.id ? (
                             <FaSpinner className="w-5 h-5 animate-spin" />
+                          ) : product.is_active ? (
+                            <FaToggleOn className="w-6 h-6" />
                           ) : (
-                            <FaTrash className="w-5 h-5" />
+                            <FaToggleOff className="w-6 h-6" />
                           )}
                         </button>
                       </div>

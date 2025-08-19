@@ -3,24 +3,25 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
-import { FaArrowLeft, FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave, FaCheck } from 'react-icons/fa';
+import { FaArrowLeft, FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave, FaCheck, FaUniversity } from 'react-icons/fa';
 import Link from 'next/link';
 import { useCart } from '../lib/context/CartContext';
 import { toast } from 'react-toastify';
 import { useAuth } from '../lib/context/AuthContext';
 import { formatPrice } from '../lib/price-utils';
+import { buildVietQRUrl } from '../lib/vietqr';
 
 type FormData = {
   name: string;
   phone: string;
   address: string;
   note: string;
-  paymentMethod: 'cod' | 'vnpay';
+  paymentMethod: 'cod' | 'vnpay' | 'bank';
 };
 
 const Checkout: NextPage = () => {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, cartLoaded } = useCart();
   const { user, isAuthenticated } = useAuth();
 
   const [formData, setFormData] = useState<FormData>({
@@ -30,6 +31,7 @@ const Checkout: NextPage = () => {
     note: '',
     paymentMethod: 'cod',
   });
+  const [paymentSettings, setPaymentSettings] = useState<any | null>(null);
 
   const [isFirstOrder, setIsFirstOrder] = useState(false);
   const [applyDiscount, setApplyDiscount] = useState(false);
@@ -42,10 +44,12 @@ const Checkout: NextPage = () => {
   const total = subtotal + shippingFee - discountAmount;
 
   useEffect(() => {
+    if (!cartLoaded) return; // wait until cart is hydrated
     if (items.length === 0) {
+      // stay on page if user manually navigated without items? redirect as before
       router.push('/cart');
     }
-  }, [items, router]);
+  }, [items, cartLoaded, router]);
 
   // Điền thông tin từ user nếu đã đăng nhập
   useEffect(() => {
@@ -60,6 +64,27 @@ const Checkout: NextPage = () => {
   }, [isAuthenticated, user]);
 
   // Tính khoảng cách bằng Google/Maps đã được tắt theo quy định. Phí giao hàng mặc định 0 trong bán kính 3 km.
+  // Load public payment settings
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/public/payment-settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.payment) {
+            setPaymentSettings(data.payment);
+            if (formData.paymentMethod === 'cod' && data.payment.accept_cash === false) {
+              if (data.payment.accept_vnpay) setFormData(f => ({ ...f, paymentMethod: 'vnpay' }));
+              else if (data.payment.accept_direct_bank || data.payment.accept_bank_transfer) setFormData(f => ({ ...f, paymentMethod: 'bank' }));
+            }
+          }
+        }
+      } catch (e) {
+        // silent
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Kiểm tra đơn hàng đầu tiên dựa trên số điện thoại
   useEffect(() => {
@@ -105,7 +130,7 @@ const Checkout: NextPage = () => {
     }
   };
 
-  const handlePaymentChange = (method: 'cod' | 'vnpay') => {
+  const handlePaymentChange = (method: 'cod' | 'vnpay' | 'bank') => {
     setFormData((prev) => ({
       ...prev,
       paymentMethod: method,
@@ -165,7 +190,7 @@ const Checkout: NextPage = () => {
         payment_method: formData.paymentMethod,
       };
       
-      if (formData.paymentMethod === 'vnpay') {
+  if (formData.paymentMethod === 'vnpay') {
         // Lưu đơn hàng trước khi chuyển sang trang thanh toán VNPay
         const response = await fetch('/api/orders/create', {
           method: 'POST',
@@ -194,8 +219,8 @@ const Checkout: NextPage = () => {
         
         // Redirect ngay lập tức đến VNPay, không clear cart ở đây
         // Cart sẽ được clear ở trang complete sau khi thanh toán
-        window.location.href = payData.redirectUrl;
-      } else {
+  window.location.href = payData.redirectUrl;
+      } else if (formData.paymentMethod === 'cod') {
         // Thanh toán COD
         const response = await fetch('/api/orders/create', {
           method: 'POST',
@@ -217,6 +242,18 @@ const Checkout: NextPage = () => {
         });
         
         // Redirect tất cả đến trang complete để có UX consistent
+        router.push(`/checkout/complete?orderId=${data.orderId}`);
+  } else if (formData.paymentMethod === 'bank') {
+        const response = await fetch('/api/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Có lỗi xảy ra khi đặt hàng');
+        }
+        toast.info('Đơn hàng đã tạo. Vui lòng chuyển khoản theo hướng dẫn.', { autoClose: 2000 });
         router.push(`/checkout/complete?orderId=${data.orderId}`);
       }
     } catch (error: any) {
@@ -327,43 +364,83 @@ const Checkout: NextPage = () => {
             {/* Phương thức thanh toán */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">Phương thức thanh toán</h2>
-              
               <div className="space-y-4">
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'cod' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300'}`}
-                  onClick={() => handlePaymentChange('cod')}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${formData.paymentMethod === 'cod' ? 'bg-primary-500' : 'border border-gray-300'}`}>
-                      {formData.paymentMethod === 'cod' && <FaCheck className="text-white text-sm" />}
-                    </div>
+                {(!paymentSettings || paymentSettings.accept_cash) && (
+                  <div className={`p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'cod' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300'}`}
+                       onClick={() => handlePaymentChange('cod')}>
                     <div className="flex items-center">
-                      <FaMoneyBillWave className="text-primary-500 text-xl mr-3" />
-                      <div>
-                        <p className="font-medium">Thanh toán khi nhận hàng (COD)</p>
-                        <p className="text-sm text-gray-500">Thanh toán bằng tiền mặt khi nhận được hàng</p>
+                      <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${formData.paymentMethod === 'cod' ? 'bg-primary-500' : 'border border-gray-300'}`}>{formData.paymentMethod === 'cod' && <FaCheck className="text-white text-sm" />}</div>
+                      <div className="flex items-center">
+                        <FaMoneyBillWave className="text-primary-500 text-xl mr-3" />
+                        <div>
+                          <p className="font-medium">Thanh toán khi nhận hàng (COD)</p>
+                          <p className="text-sm text-gray-500">Thanh toán bằng tiền mặt khi nhận được hàng</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'vnpay' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300'}`}
-                  onClick={() => handlePaymentChange('vnpay')}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${formData.paymentMethod === 'vnpay' ? 'bg-primary-500' : 'border border-gray-300'}`}>
-                      {formData.paymentMethod === 'vnpay' && <FaCheck className="text-white text-sm" />}
-                    </div>
+                )}
+                {paymentSettings && paymentSettings.accept_vnpay && (
+                  <div className={`p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'vnpay' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300'}`}
+                       onClick={() => handlePaymentChange('vnpay')}>
                     <div className="flex items-center">
-                      <FaCreditCard className="text-primary-500 text-xl mr-3" />
-                      <div>
-                        <p className="font-medium">Thanh toán VNPay</p>
-                        <p className="text-sm text-gray-500">Thanh toán bằng thẻ ngân hàng, ví điện tử, QR code</p>
+                      <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${formData.paymentMethod === 'vnpay' ? 'bg-primary-500' : 'border border-gray-300'}`}>{formData.paymentMethod === 'vnpay' && <FaCheck className="text-white text-sm" />}</div>
+                      <div className="flex items-center">
+                        <FaCreditCard className="text-primary-500 text-xl mr-3" />
+                        <div>
+                          <p className="font-medium">Thanh toán VNPay</p>
+                          <p className="text-sm text-gray-500">Thẻ ngân hàng, ví điện tử, QR code</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
+                {paymentSettings && (paymentSettings.accept_direct_bank || paymentSettings.accept_bank_transfer) && (
+                  <div className={`p-4 border rounded-lg cursor-pointer transition-colors ${formData.paymentMethod === 'bank' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300'}`}
+                       onClick={() => handlePaymentChange('bank')}>
+                    <div className="flex items-center">
+                      <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${formData.paymentMethod === 'bank' ? 'bg-primary-500' : 'border border-gray-300'}`}>{formData.paymentMethod === 'bank' && <FaCheck className="text-white text-sm" />}</div>
+                      <div className="flex items-center">
+                        <FaUniversity className="text-primary-500 text-xl mr-3" />
+                        <div>
+                          <p className="font-medium">Chuyển khoản ngân hàng</p>
+                          <p className="text-sm text-gray-500">Chuyển khoản thủ công theo hướng dẫn</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {formData.paymentMethod === 'bank' && paymentSettings && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                    <p className="font-medium mb-1">Thông tin chuyển khoản:</p>
+                    <p>Ngân hàng: <span className="font-semibold">{paymentSettings.bank_name || 'Cập nhật sau'}</span></p>
+                    <p>Số tài khoản: <span className="font-semibold">{paymentSettings.bank_account_number || 'Cập nhật sau'}</span></p>
+                    <p>Chủ tài khoản: <span className="font-semibold">{paymentSettings.bank_account_name || 'Cập nhật sau'}</span></p>
+                    <p className="mt-2 text-gray-600">Vui lòng chuyển khoản theo thông tin trên. Đơn hàng sẽ được xử lý sau khi xác nhận thanh toán.</p>
+                    {paymentSettings.bank_code && paymentSettings.bank_account_number && (
+                      <div className="mt-4">
+                        <p className="font-medium mb-2">Quét mã QR để chuyển khoản nhanh:</p>
+                        <div className="bg-white p-3 rounded-md inline-block border">
+                          {/* Use subtotal or total for amount? Use total */}
+                          {/* Description limited spaces */}
+                          {(() => {
+                            const qrUrl = buildVietQRUrl({
+                              bankCode: paymentSettings.bank_code,
+                              accountNumber: paymentSettings.bank_account_number,
+                              template: paymentSettings.bank_template || 'compact2',
+                              amount: Math.max(0, Math.round(total)),
+                              description: `Order ${formData.phone}`.substring(0, 40),
+                              accountName: paymentSettings.bank_account_name || undefined,
+                              fileExt: 'jpg'
+                            });
+                            return qrUrl ? <img src={qrUrl} alt="VietQR" className="w-64 h-auto" /> : null;
+                          })()}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Nội dung chuyển khoản tự động: CloudShop {formData.phone}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

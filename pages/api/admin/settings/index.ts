@@ -27,10 +27,14 @@ interface PaymentSettings {
   accept_cash: boolean;
   accept_bank_transfer: boolean;
   accept_credit_card: boolean;
+  accept_vnpay: boolean;
+  accept_direct_bank: boolean; // chuyển khoản ngân hàng thủ công
   bank_account_name: string;
   bank_account_number: string;
   bank_name: string;
-  [key: string]: boolean | string;
+  bank_code?: string; // vietqr bank code slug (e.g., vietinbank)
+  bank_template?: string; // vietqr template (e.g., compact2)
+  [key: string]: boolean | string | undefined;
 }
 
 interface Settings {
@@ -111,9 +115,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           accept_cash: true,
           accept_bank_transfer: false,
           accept_credit_card: false,
+          accept_vnpay: true,
+          accept_direct_bank: false,
           bank_account_name: '',
           bank_account_number: '',
           bank_name: '',
+          bank_code: '',
+          bank_template: 'compact2',
         }
       };
       
@@ -122,8 +130,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const [category, key] = item.setting_key.split('.');
         
         if (category && key && settings[category]) {
-          if (category === 'payment' && (key === 'accept_cash' || key === 'accept_bank_transfer' || key === 'accept_credit_card')) {
-            settings[category][key] = item.setting_value === 'true';
+          if (category === 'payment') {
+            if (key.startsWith('accept_')) {
+              settings[category][key] = item.setting_value === 'true';
+            } else if (key.startsWith('bank_')) {
+              settings[category][key] = item.setting_value;
+            } else if (['bank_code','bank_template'].includes(key)) {
+              (settings[category] as any)[key] = item.setting_value;
+            }
           } else if (category === 'shipping') {
             settings[category][key] = parseFloat(item.setting_value);
           } else if (category === 'store') {
@@ -161,9 +175,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { key: 'payment.accept_cash', value: String(payment.accept_cash) },
         { key: 'payment.accept_bank_transfer', value: String(payment.accept_bank_transfer) },
         { key: 'payment.accept_credit_card', value: String(payment.accept_credit_card) },
+  { key: 'payment.accept_vnpay', value: String(payment.accept_vnpay) },
+  { key: 'payment.accept_direct_bank', value: String(payment.accept_direct_bank) },
         { key: 'payment.bank_account_name', value: payment.bank_account_name },
         { key: 'payment.bank_account_number', value: payment.bank_account_number },
         { key: 'payment.bank_name', value: payment.bank_name },
+  { key: 'payment.bank_code', value: (payment as any).bank_code || '' },
+  { key: 'payment.bank_template', value: (payment as any).bank_template || 'compact2' },
       ];
       
       // Cập nhật từng thiết lập

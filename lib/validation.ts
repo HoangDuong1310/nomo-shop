@@ -45,7 +45,7 @@ export const validateOrderData = (data: any): { isValid: boolean; message?: stri
     return { isValid: false, message: 'Tổng tiền không hợp lệ' };
   }
   
-  if (!payment_method || !['cod', 'vnpay'].includes(payment_method)) {
+  if (!payment_method || !['cod', 'vnpay', 'bank'].includes(payment_method)) {
     return { isValid: false, message: 'Phương thức thanh toán không hợp lệ' };
   }
   

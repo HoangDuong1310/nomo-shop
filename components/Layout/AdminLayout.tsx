@@ -113,6 +113,12 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       active: router.pathname.startsWith('/admin/shop-status'),
     },
     {
+      title: 'QR Redirects',
+      icon: <FaChartBar className="w-5 h-5" />, // reuse icon; could switch to a link icon
+      href: '/admin/qr',
+      active: router.pathname.startsWith('/admin/qr'),
+    },
+    {
       title: 'Cài đặt',
       icon: <FaCog className="w-5 h-5" />,
       href: '/admin/settings',

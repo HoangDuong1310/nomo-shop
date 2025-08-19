@@ -20,13 +20,14 @@ type CartContextType = {
   clearCart: () => void;
   itemsCount: number;
   subtotal: number;
+  cartLoaded: boolean;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Sử dụng useLocalStorage để tự động sync với localStorage
-  const [items, setItems] = useLocalStorage<CartItem[]>('cart', []);
+  const [items, setItems, cartLoaded] = useLocalStorage<CartItem[]>('cart', []);
   
   const addItem = (item: Omit<CartItem, 'id'>) => {
     // Kiểm tra nếu sản phẩm đã có trong giỏ hàng với cùng variant combination
@@ -79,7 +80,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeItem,
         clearCart,
         itemsCount,
-        subtotal,
+  subtotal,
+  cartLoaded,
       }}
     >
       {children}
