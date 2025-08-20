@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       ${whereClause}
-      ORDER BY p.is_featured DESC, p.created_at DESC
+      ORDER BY p.is_active DESC, p.is_featured DESC, p.created_at DESC
       LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
 

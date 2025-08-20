@@ -53,6 +53,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
       if (result.success) {
         onImageChange(result.imageUrl);
+        setPreviewImage(result.imageUrl); // Set preview to the actual uploaded URL
         console.log('Upload successful:', result.imageUrl);
       } else {
         throw new Error(result.error || 'Upload failed');

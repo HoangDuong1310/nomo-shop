@@ -146,9 +146,9 @@ export const getServerSideProps: GetServerSideProps = async () => {
       query: 'SELECT * FROM categories ORDER BY name',
     });
 
-    // Lấy danh sách sản phẩm
+    // Lấy danh sách sản phẩm (chỉ lấy sản phẩm đang bán)
     const products = await executeQuery({
-      query: 'SELECT id, name, description, price, sale_price, image, category_id, stock_quantity, is_featured, is_active, created_at, updated_at FROM products ORDER BY is_featured DESC, created_at DESC',
+      query: 'SELECT id, name, description, price, sale_price, image, category_id, stock_quantity, is_featured, is_active, created_at, updated_at FROM products WHERE is_active = 1 ORDER BY is_featured DESC, created_at DESC',
     });
 
     // Hàm xử lý để chuyển đổi các trường Date thành chuỗi ISO

@@ -4,8 +4,8 @@ module.exports = {
       name: 'cloud-shop',
       script: 'npm',
       args: 'start',
-      instances: 'max', // Sử dụng tất cả CPU cores
-      exec_mode: 'cluster',
+      instances: 1, // Sử dụng single instance để tránh vấn đề static files
+      exec_mode: 'fork', // Sử dụng fork mode thay vì cluster
       env: {
         NODE_ENV: 'production',
         PORT: 3000
