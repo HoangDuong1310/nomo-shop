@@ -278,7 +278,7 @@ const RecipeDetailPage: NextPage = () => {
                 </span>
                 <span className="flex items-center gap-1">
                   <FaStar className="w-4 h-4 text-yellow-500" />
-                  {parseFloat(recipe.rating || '0').toFixed(1)}
+                  {Number(recipe.rating || 0).toFixed(1)}
                 </span>
                 <span className="text-xs">
                   Tạo ngày {new Date(recipe.created_at).toLocaleDateString('vi-VN')}
