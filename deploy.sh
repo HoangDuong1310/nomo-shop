@@ -56,30 +56,57 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-print_status "Step 4/5: Building application..."
+print_status "Step 4/6: Building application..."
 npm run build
 if [ $? -ne 0 ]; then
     print_error "Build failed"
     exit 1
 fi
 
-print_status "Step 5/5: Setting up PM2..."
+print_status "Step 5/6: Stopping existing application..."
+if command -v pm2 &> /dev/null; then
+    pm2 stop cloud-shop 2>/dev/null || echo "No existing process to stop"
+    pm2 delete cloud-shop 2>/dev/null || echo "No existing process to delete"
+else
+    pkill -f "npm start" 2>/dev/null || echo "No existing npm process to stop"
+    pkill -f "node.*next" 2>/dev/null || echo "No existing node process to stop"
+fi
+
+print_status "Step 6/6: Starting application..."
 if command -v pm2 &> /dev/null; then
     pm2 start ecosystem.config.js
     pm2 save
     print_status "Application started with PM2"
+    
+    # Wait a moment and check if it's running
+    sleep 3
+    pm2 status cloud-shop
 else
     print_warning "PM2 not found. Starting with npm..."
     npm start &
 fi
 
+print_status "Reloading Nginx configuration..."
+if command -v nginx &> /dev/null; then
+    sudo nginx -t && sudo systemctl reload nginx
+    if [ $? -eq 0 ]; then
+        print_status "Nginx reloaded successfully"
+    else
+        print_warning "Nginx reload failed - please check configuration"
+    fi
+fi
+
 echo ""
 echo "🎉 DEPLOYMENT COMPLETED!"
 echo ""
-echo "Next steps:"
-echo "1. Edit .env.local with your actual configuration"
-echo "2. Restart the application: pm2 restart cloud-shop"
-echo "3. Check status: pm2 status"
-echo "4. View logs: pm2 logs cloud-shop"
+echo "Next steps if needed:"
+echo "1. Check application status: pm2 status"
+echo "2. View logs: pm2 logs cloud-shop"
+echo "3. Restart if needed: pm2 restart cloud-shop"
+echo "4. Edit .env.local if configuration changes needed"
 echo ""
-echo "Your Cloud Shop should be running on http://localhost:3000"
+echo "Your Cloud Shop should be running on https://nomoshop.app"
+echo ""
+print_status "Checking application health..."
+sleep 2
+curl -f http://localhost:3000 >/dev/null 2>&1 && echo "✅ Application is responding" || echo "⚠️ Application may not be responding yet"
