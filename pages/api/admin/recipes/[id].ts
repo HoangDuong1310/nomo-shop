@@ -110,10 +110,18 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     let dietaryTags = [];
     if (recipe.dietary_tags) {
       try {
-        dietaryTags = JSON.parse(recipe.dietary_tags);
+        // If it's already an array, use it directly
+        if (Array.isArray(recipe.dietary_tags)) {
+          dietaryTags = recipe.dietary_tags;
+        } else if (typeof recipe.dietary_tags === 'string') {
+          // Try to parse as JSON first
+          dietaryTags = JSON.parse(recipe.dietary_tags);
+        }
       } catch (e) {
-        // If not JSON, split by space (for legacy data)
-        dietaryTags = recipe.dietary_tags.split(' ').filter((t: string) => t.length > 0);
+        // If not JSON and it's a string, split by space (for legacy data)
+        if (typeof recipe.dietary_tags === 'string') {
+          dietaryTags = recipe.dietary_tags.split(' ').filter((t: string) => t.length > 0);
+        }
       }
     }
     
