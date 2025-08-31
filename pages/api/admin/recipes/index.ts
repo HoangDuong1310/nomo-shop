@@ -5,7 +5,6 @@ import { verifyToken } from '../../../../lib/auth';
 import { getTokenFromRequest } from '../../../../lib/auth-utils';
 import { 
   Recipe, 
-  RecipeFilters, 
   RecipeListResponse, 
   RecipeCreateResponse 
 } from '../../../../types/recipe';
@@ -18,21 +17,16 @@ async function verifyAdmin(req: NextApiRequest): Promise<{ isValid: boolean; use
   }
   
   try {
-    // Get token from cookie or header
     const token = getTokenFromRequest(req) || req.cookies.auth_token;
-    
     if (!token) {
       return { isValid: false };
     }
     
-    // Verify token
     const decodedToken = verifyToken(token);
-    
     if (!decodedToken || !decodedToken.id) {
       return { isValid: false };
     }
     
-    // Check admin role
     const userResult = await executeQuery({
       query: 'SELECT role FROM users WHERE id = ?',
       values: [decodedToken.id],
@@ -49,96 +43,25 @@ async function verifyAdmin(req: NextApiRequest): Promise<{ isValid: boolean; use
   }
 }
 
-// GET: List recipes with filters and pagination
+// GET: List recipes with simple pagination
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Parse query parameters
-    const {
-      page = '1',
-      limit = '12',
-      search = '',
-      difficulty,
-      dietary_tags,
-      meal_type,
-      cuisine_type,
-      min_time,
-      max_time,
-      is_featured,
-      is_active,
-      sort_by = 'created_at',
-      sort_order = 'desc'
-    } = req.query as Record<string, string>;
+    const { page = '1', limit = '12' } = req.query as Record<string, string>;
     
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 12;
     const offset = (pageNum - 1) * limitNum;
     
-    // Build WHERE conditions
-    const conditions: string[] = [];
-    const params: any[] = [];
-    
-    if (search) {
-      conditions.push('(r.name LIKE ? OR r.description LIKE ?)');
-      params.push(`%${search}%`, `%${search}%`);
-    }
-    
-    if (difficulty) {
-      conditions.push('r.difficulty_level = ?');
-      params.push(difficulty);
-    }
-    
-    if (meal_type) {
-      conditions.push('r.meal_type = ?');
-      params.push(meal_type);
-    }
-    
-    if (cuisine_type) {
-      conditions.push('r.cuisine_type = ?');
-      params.push(cuisine_type);
-    }
-    
-    if (dietary_tags) {
-      conditions.push('JSON_CONTAINS(r.dietary_tags, ?)');
-      params.push(JSON.stringify([dietary_tags]));
-    }
-    
-    if (min_time) {
-      conditions.push('r.total_time >= ?');
-      params.push(parseInt(min_time));
-    }
-    
-    if (max_time) {
-      conditions.push('r.total_time <= ?');
-      params.push(parseInt(max_time));
-    }
-    
-    if (is_featured !== undefined) {
-      conditions.push('r.is_featured = ?');
-      params.push(is_featured === 'true' ? 1 : 0);
-    }
-    
-    if (is_active !== undefined) {
-      conditions.push('r.is_active = ?');
-      params.push(is_active === 'true' ? 1 : 0);
-    }
-    
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    
-    // Validate sort_by column
-    const validSortColumns = ['name', 'created_at', 'updated_at', 'rating', 'views', 'total_time'];
-    const sortColumn = validSortColumns.includes(sort_by) ? sort_by : 'created_at';
-    const sortDirection = sort_order === 'asc' ? 'ASC' : 'DESC';
-    
-    // Get total count
+    // Get total count first
     const countResult = await executeQuery({
-      query: `SELECT COUNT(*) as total FROM recipes r ${whereClause}`,
-      values: params
+      query: 'SELECT COUNT(*) as total FROM recipes',
+      values: []
     });
     const total = (countResult as any[])[0]?.total || 0;
     
-    // Get recipes with pagination - ensure parameters are integers
+    // Get recipes with simple pagination
     const recipes = await executeQuery({
-      query: `SELECT
+      query: `SELECT 
         r.id,
         r.name,
         r.description,
@@ -160,10 +83,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
         r.created_at,
         r.updated_at
       FROM recipes r
-      ${whereClause}
-      ORDER BY r.${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      values: [...params, limitNum, offset]
+      ORDER BY r.created_at DESC
+      LIMIT ${limitNum} OFFSET ${offset}`,
+      values: []
     });
     
     // Parse dietary_tags JSON for each recipe
@@ -171,11 +93,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       let tags = [];
       if (recipe.dietary_tags) {
         try {
-          // Try to parse as JSON first
           tags = JSON.parse(recipe.dietary_tags);
         } catch (e) {
-          // If not JSON, split by space (for legacy data)
-          tags = recipe.dietary_tags.split(' ').filter((t: string) => t.length > 0);
+          tags = [];
         }
       }
       return {
@@ -203,9 +123,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
 // POST: Create a new recipe
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
-  
   try {
-    
     const {
       name,
       description,
