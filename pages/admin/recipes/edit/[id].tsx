@@ -116,13 +116,33 @@ const EditRecipePage: NextPage<EditRecipePageProps> = ({ recipeId }) => {
           dietary_tags: recipe.dietary_tags || [],
           cuisine_type: recipe.cuisine_type || '',
           meal_type: recipe.meal_type || '',
-          calories: recipe.calories,
+          calories: recipe.calories ?? undefined,
           is_featured: recipe.is_featured,
           is_active: recipe.is_active,
-          ingredients: recipe.ingredients || [],
-          steps: recipe.steps || [],
+          ingredients: (recipe.ingredients || []).map(ing => ({
+            ingredient_name: ing.ingredient_name,
+            quantity: ing.quantity?.toString() || '',
+            unit: ing.unit || '',
+            notes: ing.notes || undefined,
+            is_optional: ing.is_optional
+          })),
+          steps: (recipe.steps || []).map(step => ({
+            instruction: step.instruction,
+            image: step.image || undefined,
+            duration_minutes: step.duration_minutes ?? undefined,
+            tips: step.tips || undefined
+          })),
           categories: recipe.categories?.map(c => c.id) || [],
-          nutrition: recipe.nutrition || {
+          nutrition: recipe.nutrition ? {
+            calories: recipe.nutrition.calories ?? undefined,
+            protein: recipe.nutrition.protein ?? undefined,
+            carbohydrates: recipe.nutrition.carbohydrates ?? undefined,
+            fat: recipe.nutrition.fat ?? undefined,
+            fiber: recipe.nutrition.fiber ?? undefined,
+            sugar: recipe.nutrition.sugar ?? undefined,
+            sodium: recipe.nutrition.sodium ?? undefined,
+            cholesterol: recipe.nutrition.cholesterol ?? undefined
+          } : {
             calories: undefined,
             protein: undefined,
             carbohydrates: undefined,
@@ -239,13 +259,33 @@ const EditRecipePage: NextPage<EditRecipePageProps> = ({ recipeId }) => {
         dietary_tags: originalData.dietary_tags || [],
         cuisine_type: originalData.cuisine_type || '',
         meal_type: originalData.meal_type || '',
-        calories: originalData.calories,
+        calories: originalData.calories ?? undefined,
         is_featured: originalData.is_featured,
         is_active: originalData.is_active,
-        ingredients: originalData.ingredients || [],
-        steps: originalData.steps || [],
+        ingredients: (originalData.ingredients || []).map(ing => ({
+          ingredient_name: ing.ingredient_name,
+          quantity: ing.quantity?.toString() || '',
+          unit: ing.unit || '',
+          notes: ing.notes || undefined,
+          is_optional: ing.is_optional
+        })),
+        steps: (originalData.steps || []).map(step => ({
+          instruction: step.instruction,
+          image: step.image || undefined,
+          duration_minutes: step.duration_minutes ?? undefined,
+          tips: step.tips || undefined
+        })),
         categories: originalData.categories?.map(c => c.id) || [],
-        nutrition: originalData.nutrition || {
+        nutrition: originalData.nutrition ? {
+          calories: originalData.nutrition.calories ?? undefined,
+          protein: originalData.nutrition.protein ?? undefined,
+          carbohydrates: originalData.nutrition.carbohydrates ?? undefined,
+          fat: originalData.nutrition.fat ?? undefined,
+          fiber: originalData.nutrition.fiber ?? undefined,
+          sugar: originalData.nutrition.sugar ?? undefined,
+          sodium: originalData.nutrition.sodium ?? undefined,
+          cholesterol: originalData.nutrition.cholesterol ?? undefined
+        } : {
           calories: undefined,
           protein: undefined,
           carbohydrates: undefined,
@@ -478,7 +518,7 @@ const EditRecipePage: NextPage<EditRecipePageProps> = ({ recipeId }) => {
                     <div className="flex gap-4">
                       <input
                         type="text"
-                        value={formData.image || ''}
+                        value={typeof formData.image === 'string' ? formData.image : ''}
                         onChange={(e) => handleImageChange(e.target.value)}
                         placeholder="URL hình ảnh công thức"
                         className="input-field flex-1"
@@ -632,8 +672,20 @@ const EditRecipePage: NextPage<EditRecipePageProps> = ({ recipeId }) => {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Nguyên liệu</h2>
                 <IngredientInput
-                  ingredients={formData.ingredients || []}
-                  onChange={(ingredients) => updateFormData('ingredients', ingredients)}
+                  ingredients={(formData.ingredients || []).map(ing => ({
+                    ingredient_name: ing.ingredient_name,
+                    quantity: ing.quantity ? parseFloat(ing.quantity) : undefined,
+                    unit: ing.unit,
+                    notes: ing.notes || undefined,
+                    is_optional: ing.is_optional
+                  }))}
+                  onChange={(ingredients) => updateFormData('ingredients', ingredients.map(ing => ({
+                    ingredient_name: ing.ingredient_name || '',
+                    quantity: ing.quantity?.toString() || '',
+                    unit: ing.unit || '',
+                    notes: ing.notes || undefined,
+                    is_optional: ing.is_optional || false
+                  })))}
                   error={errors.ingredients}
                 />
               </div>
@@ -644,8 +696,18 @@ const EditRecipePage: NextPage<EditRecipePageProps> = ({ recipeId }) => {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Cách làm</h2>
                 <StepInput
-                  steps={formData.steps || []}
-                  onChange={(steps) => updateFormData('steps', steps)}
+                  steps={(formData.steps || []).map(step => ({
+                    instruction: step.instruction,
+                    image: typeof step.image === 'string' ? step.image : undefined,
+                    duration_minutes: step.duration_minutes,
+                    tips: step.tips || undefined
+                  }))}
+                  onChange={(steps) => updateFormData('steps', steps.map(step => ({
+                    instruction: step.instruction || '',
+                    image: step.image || undefined,
+                    duration_minutes: step.duration_minutes,
+                    tips: step.tips || undefined
+                  })))}
                   error={errors.steps}
                 />
               </div>

@@ -342,7 +342,7 @@ const AddRecipePage: NextPage = () => {
                     <div className="flex gap-4">
                       <input
                         type="text"
-                        value={formData.image || ''}
+                        value={typeof formData.image === 'string' ? formData.image : ''}
                         onChange={(e) => handleImageChange(e.target.value)}
                         placeholder="URL hình ảnh công thức"
                         className="input-field flex-1"
@@ -487,7 +487,7 @@ const AddRecipePage: NextPage = () => {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Nguyên liệu</h2>
                 <IngredientInput
-                  ingredients={formData.ingredients || []}
+                  ingredients={(formData.ingredients || []) as any}
                   onChange={(ingredients) => updateFormData('ingredients', ingredients)}
                   error={errors.ingredients}
                 />
@@ -499,7 +499,7 @@ const AddRecipePage: NextPage = () => {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Cách làm</h2>
                 <StepInput
-                  steps={formData.steps || []}
+                  steps={(formData.steps || []) as any}
                   onChange={(steps) => updateFormData('steps', steps)}
                   error={errors.steps}
                 />
