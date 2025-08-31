@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 // Database configuration - using the same approach as the working API
 const DB_CONFIG = {
-  host: process.env.DB_HOST || process.env.MYSQL_HOST || 'localhost',
+  host: process.env.DB_HOST || process.env.MYSQL_HOST || '127.0.0.1',
   port: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT || '3306'),
   database: process.env.DB_DATABASE || process.env.MYSQL_DATABASE || 'cloudshop',
   user: process.env.DB_USER || process.env.MYSQL_USER || 'root',
