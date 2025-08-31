@@ -1,14 +1,6 @@
 const mysql = require('mysql2/promise');
 const { v4: uuidv4 } = require('uuid');
 
-// Database configuration - using the same approach as the working API
-const DB_CONFIG = {
-  host: process.env.DB_HOST || process.env.MYSQL_HOST || '127.0.0.1',
-  port: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT || '3306'),
-  database: process.env.DB_DATABASE || process.env.MYSQL_DATABASE || 'cloudshop',
-  user: process.env.DB_USER || process.env.MYSQL_USER || 'root',
-  password: process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || ''
-};
 
 // Vietnamese recipe data structured for seeding
 const RECIPES_DATA = [
@@ -186,86 +178,18 @@ class RecipeSeedManager {
 
   async connect() {
     try {
-      // First try to connect to the database
-      try {
-        this.connection = await mysql.createConnection(DB_CONFIG);
-        console.log('✅ Connected to database successfully');
-        return;
-      } catch (error) {
-        if (error.code === 'ER_BAD_DB_ERROR') {
-          console.log('🔨 Database does not exist, creating it...');
-          await this.createDatabase();
-        } else {
-          console.log('⚠️  Database connection error:', error.code, '-', error.message);
-          if (error.message.includes('Schema directory')) {
-            console.log('💡 This appears to be a MySQL schema directory issue.');
-            console.log('💡 Trying to connect directly without creating database...');
-            // Try connecting with a different approach
-            await this.connectWithRetry();
-            return;
-          }
-          throw error;
-        }
-      }
-      
-      // Try connecting again after creating database
-      this.connection = await mysql.createConnection(DB_CONFIG);
+      // Use same simple connection as setup-recipes-tables.js
+      this.connection = await mysql.createConnection({
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_DATABASE || 'cloudshop'
+      });
       console.log('✅ Connected to database successfully');
     } catch (error) {
       console.error('❌ Database connection failed:', error.message);
       throw error;
-    }
-  }
-
-  async connectWithRetry() {
-    // Try connecting without specifying database first, then use the database
-    const tempConnection = await mysql.createConnection({
-      host: DB_CONFIG.host,
-      port: DB_CONFIG.port,
-      user: DB_CONFIG.user,
-      password: DB_CONFIG.password,
-    });
-    
-    try {
-      // Check if database exists
-      const [databases] = await tempConnection.execute('SHOW DATABASES');
-      const dbExists = databases.some(row => Object.values(row)[0] === DB_CONFIG.database);
-      
-      if (!dbExists) {
-        console.log(`🔨 Creating database ${DB_CONFIG.database}...`);
-        await tempConnection.execute(`CREATE DATABASE ${DB_CONFIG.database} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-        console.log('✅ Database created successfully');
-      } else {
-        console.log('✅ Database already exists');
-      }
-      
-      // Use the database
-      await tempConnection.execute(`USE ${DB_CONFIG.database}`);
-      this.connection = tempConnection;
-      console.log('✅ Connected to database successfully');
-      
-    } catch (error) {
-      await tempConnection.end();
-      throw error;
-    }
-  }
-
-  async createDatabase() {
-    const dbName = DB_CONFIG.database;
-    
-    // Create connection without specifying database
-    const tempConnection = await mysql.createConnection({
-      host: DB_CONFIG.host,
-      port: DB_CONFIG.port,
-      user: DB_CONFIG.user,
-      password: DB_CONFIG.password,
-    });
-    
-    try {
-      await tempConnection.execute(`CREATE DATABASE IF NOT EXISTS ${dbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-      console.log(`✅ Database '${dbName}' created successfully`);
-    } finally {
-      await tempConnection.end();
     }
   }
 
