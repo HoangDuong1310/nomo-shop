@@ -1,6 +1,5 @@
 const mysql = require('mysql2/promise');
 const { v4: uuidv4 } = require('uuid');
-const { executeQuery } = require('../lib/db');
 
 // Database configuration - using the same approach as the working API
 const DB_CONFIG = {
