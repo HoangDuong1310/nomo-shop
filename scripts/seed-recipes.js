@@ -502,8 +502,9 @@ class RecipeSeedManager {
 
 // CLI execution
 async function main() {
-  // Load environment variables
-  require('dotenv').config({ path: '.env.local' });
+  // Load environment variables using the same method as setup-recipes-tables.js
+  const { loadEnvConfig } = require('./utils/env-loader');
+  loadEnvConfig();
   
   const args = process.argv.slice(2);
   const options = {
