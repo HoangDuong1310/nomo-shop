@@ -69,8 +69,8 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       sort_order = 'desc'
     } = req.query as Record<string, string>;
     
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 12;
     const offset = (pageNum - 1) * limitNum;
     
     // Build WHERE conditions
@@ -136,9 +136,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     });
     const total = (countResult as any[])[0]?.total || 0;
     
-    // Get recipes with pagination
+    // Get recipes with pagination - ensure parameters are integers
     const recipes = await executeQuery({
-      query: `SELECT 
+      query: `SELECT
         r.id,
         r.name,
         r.description,
