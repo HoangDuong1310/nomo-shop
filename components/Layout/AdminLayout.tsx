@@ -13,7 +13,8 @@ import {
   FaTimes, 
   FaSignOutAlt,
   FaBell,
-  FaStore
+  FaStore,
+  FaUtensils
 } from 'react-icons/fa';
 import { useAuth } from '../../lib/context/AuthContext';
 import { useStoreInfo } from '../../lib/context/StoreInfoContext';
@@ -83,6 +84,12 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       icon: <FaBoxOpen className="w-5 h-5" />,
       href: '/admin/products',
       active: router.pathname.startsWith('/admin/products'),
+    },
+    {
+      title: 'Công thức nấu',
+      icon: <FaUtensils className="w-5 h-5" />,
+      href: '/admin/recipes',
+      active: router.pathname.startsWith('/admin/recipes'),
     },
     {
       title: 'Danh mục',

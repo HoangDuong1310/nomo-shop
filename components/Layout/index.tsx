@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useCart } from '../../lib/context/CartContext';
 import { ShopStatusProvider } from '../../lib/context/ShopStatusContext';
 import ShopStatusOverlay from '../ShopStatusOverlay';
+import NotificationBanner from '../NotificationBanner';
 
 type LayoutProps = {
   children: ReactNode;
@@ -17,6 +18,7 @@ const Layout = ({ children }: LayoutProps) => {
     <ShopStatusProvider>
       <div className="flex flex-col min-h-screen">
         <Header cartItemsCount={itemsCount} />
+        <NotificationBanner />
         <main className="flex-grow">{children}</main>
         <Footer />
         <ShopStatusOverlay />

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../../lib/db';
+import PushNotificationService from '../../../../lib/push-notification-service';
 
 interface ForceStatusResponse {
   status: 'auto' | 'open' | 'closed';
@@ -65,6 +66,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `,
           values: ['force_message', messageValue, messageValue]
         });
+
+        // Send push notifications for status changes
+        if (status !== 'auto') {
+          try {
+            const isOpen = status === 'open';
+            const notificationMessage = messageValue || 
+              (isOpen ? 'Cửa hàng đã mở cửa đặc biệt!' : 'Cửa hàng tạm thời đóng cửa');
+            
+            await PushNotificationService.sendShopStatusNotification(
+              isOpen,
+              notificationMessage
+            );
+            
+            console.log(`Sent push notifications for shop status change: ${status}`);
+          } catch (pushError) {
+            console.error('Error sending push notifications:', pushError);
+            // Don't fail the whole operation if push notifications fail
+          }
+        }
 
         return res.status(200).json({ 
           success: true, 

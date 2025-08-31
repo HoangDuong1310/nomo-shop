@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { executeQuery } from '../../../lib/db';
 import { verifyToken } from '../../../lib/auth';
+import PushNotificationService from '../../../lib/push-notification-service';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Chỉ chấp nhận phương thức PUT
@@ -96,6 +97,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       query,
       values,
     });
+
+    // Send push notification for order status updates
+    if (orderStatus) {
+      try {
+        // Get order and user information
+        const orderResult = await executeQuery({
+          query: 'SELECT user_id, id FROM orders WHERE id = ?',
+          values: [orderId]
+        });
+
+        if ((orderResult as any[]).length > 0) {
+          const order = (orderResult as any[])[0];
+          const statusMessages: { [key: string]: string } = {
+            confirmed: 'Đơn hàng của bạn đã được xác nhận',
+            processing: 'Đơn hàng của bạn đang được chuẩn bị', 
+            shipping: 'Đơn hàng của bạn đã được giao cho đơn vị vận chuyển',
+            completed: 'Đơn hàng của bạn đã hoàn thành',
+            cancelled: 'Đơn hàng của bạn đã bị hủy'
+          };
+
+          const message = statusMessages[orderStatus] || 'Trạng thái đơn hàng đã được cập nhật';
+          
+          await PushNotificationService.sendOrderStatusNotification(
+            order.user_id,
+            orderId,
+            orderStatus,
+            message
+          );
+
+          console.log(`Sent push notification for order ${orderId} status change: ${orderStatus}`);
+        }
+      } catch (pushError) {
+        console.error('Error sending push notification for order update:', pushError);
+        // Don't fail the whole operation if push notifications fail
+      }
+    }
 
     res.status(200).json({
       success: true,

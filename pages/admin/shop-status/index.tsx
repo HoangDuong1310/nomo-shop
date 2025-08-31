@@ -15,7 +15,8 @@ import {
   FaEdit,
   FaTrash,
   FaEye,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaCheck
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -41,6 +42,9 @@ const AdminShopStatus: NextPage = () => {
   const [operatingHours, setOperatingHours] = useState<OperatingHours[]>([]);
   const [notifications, setNotifications] = useState<ShopNotification[]>([]);
   const [emailSubscribers, setEmailSubscribers] = useState<any[]>([]);
+  const [pushSubscriptions, setPushSubscriptions] = useState<any[]>([]);
+  const [pushStats, setPushStats] = useState<any[]>([]);
+  const [pushSettings, setPushSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('hours');
@@ -60,6 +64,16 @@ const AdminShopStatus: NextPage = () => {
     is_active: true
   });
 
+  // Push notification states
+  const [showPushModal, setShowPushModal] = useState(false);
+  const [pushForm, setPushForm] = useState({
+    title: '',
+    message: '',
+    type: 'special_announcement',
+    url: ''
+  });
+  const [pushSending, setPushSending] = useState(false);
+
   const dayNames = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
 
   // Load data on component mount
@@ -74,6 +88,7 @@ const AdminShopStatus: NextPage = () => {
         loadOperatingHours(),
         loadNotifications(),
         loadEmailSubscribers(),
+        loadPushNotifications(),
         loadForceStatus()
       ]);
     } catch (error) {
@@ -116,6 +131,20 @@ const AdminShopStatus: NextPage = () => {
       }
     } catch (error) {
       console.error('Error loading email subscribers:', error);
+    }
+  };
+
+  const loadPushNotifications = async () => {
+    try {
+      const response = await fetch('/api/admin/push/notifications');
+      if (response.ok) {
+        const data = await response.json();
+        setPushSubscriptions(data.subscriptions || []);
+        setPushStats(data.stats || []);
+        setPushSettings(data.settings || {});
+      }
+    } catch (error) {
+      console.error('Error loading push notifications:', error);
     }
   };
 
@@ -235,6 +264,56 @@ const AdminShopStatus: NextPage = () => {
       }
     } catch (error) {
       toast.error('Lưu thông báo thất bại');
+    }
+  };
+
+  // Push notification management functions
+  const handleSendPushNotification = async () => {
+    if (!pushForm.title || !pushForm.message) {
+      toast.error('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    setPushSending(true);
+    try {
+      const response = await fetch('/api/admin/push/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pushForm)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Đã gửi push notification thành công! (${data.sent} thành công, ${data.failed} thất bại)`);
+        setShowPushModal(false);
+        setPushForm({ title: '', message: '', type: 'special_announcement', url: '' });
+        loadPushNotifications();
+      } else {
+        throw new Error('Send failed');
+      }
+    } catch (error) {
+      toast.error('Gửi push notification thất bại');
+    } finally {
+      setPushSending(false);
+    }
+  };
+
+  const handleDeletePushSubscription = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa push subscription này?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/push/notifications?id=${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        toast.success('Xóa push subscription thành công!');
+        loadPushNotifications();
+      } else {
+        throw new Error('Delete failed');
+      }
+    } catch (error) {
+      toast.error('Xóa push subscription thất bại');
     }
   };
 
@@ -375,6 +454,17 @@ const AdminShopStatus: NextPage = () => {
               >
                 <FaEye className="inline mr-2" />
                 Email subscribers ({emailSubscribers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('push')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'push'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FaBell className="inline mr-2" />
+                Push notifications
               </button>
               <button
                 onClick={() => setActiveTab('force')}
@@ -623,6 +713,153 @@ const AdminShopStatus: NextPage = () => {
                 <div className="text-center py-12 text-gray-500">
                   <FaBell className="text-4xl mx-auto mb-4 text-gray-300" />
                   <p>Chưa có ai đăng ký nhận thông báo</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Push Notifications Tab */}
+          {activeTab === 'push' && (
+            <div className="p-6">
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Push Notifications</h2>
+                  <button
+                    onClick={() => setShowPushModal(true)}
+                    className="btn-primary flex items-center px-4 py-2"
+                  >
+                    <FaPlus className="mr-2" />
+                    Gửi thông báo
+                  </button>
+                </div>
+                <p className="text-gray-600">
+                  Quản lý và gửi thông báo push đến người dùng đã đăng ký
+                </p>
+              </div>
+
+              {/* Push Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-center">
+                    <FaBell className="text-2xl text-blue-600 mr-3" />
+                    <div>
+                      <p className="text-sm text-gray-600">Tổng subscribers</p>
+                      <p className="text-2xl font-bold text-blue-600">{pushSubscriptions.length}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex items-center">
+                    <FaCheck className="text-2xl text-green-600 mr-3" />
+                    <div>
+                      <p className="text-sm text-gray-600">Active subscriptions</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {pushSubscriptions.filter(sub => sub.is_active).length}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="flex items-center">
+                    <FaSpinner className="text-2xl text-purple-600 mr-3" />
+                    <div>
+                      <p className="text-sm text-gray-600">Sent today</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {pushStats.filter(stat => 
+                          stat.date === new Date().toISOString().split('T')[0] && 
+                          stat.status === 'sent'
+                        ).reduce((sum, stat) => sum + stat.count, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Push Subscriptions List */}
+              {pushSubscriptions.length > 0 ? (
+                <div className="bg-white border rounded-lg overflow-hidden">
+                  <div className="px-6 py-4 border-b bg-gray-50">
+                    <h3 className="text-lg font-medium">Push Subscriptions ({pushSubscriptions.length})</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            User
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Browser
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Registered
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {pushSubscriptions.map((subscription) => (
+                          <tr key={subscription.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {subscription.user_email || subscription.user_name || 'Anonymous'}
+                              </div>
+                              {subscription.user_email && (
+                                <div className="text-sm text-gray-500">{subscription.user_email}</div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {subscription.browser_info ? 
+                                  JSON.parse(subscription.browser_info).name + ' ' + 
+                                  JSON.parse(subscription.browser_info).version 
+                                  : 'Unknown'}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {subscription.browser_info ? 
+                                  JSON.parse(subscription.browser_info).platform 
+                                  : 'Unknown platform'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(subscription.created_at).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                subscription.is_active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {subscription.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => handleDeletePushSubscription(subscription.id)}
+                                className="text-red-600 hover:text-red-900"
+                                title="Xóa subscription"
+                              >
+                                <FaTrash />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <FaBell className="text-4xl mx-auto mb-4 text-gray-300" />
+                  <p>Chưa có push subscriptions</p>
+                  <p className="text-sm mt-2">Khuyến khích người dùng bật thông báo push trên trang web</p>
                 </div>
               )}
             </div>
@@ -901,6 +1138,98 @@ const AdminShopStatus: NextPage = () => {
                 className="btn-primary px-6 py-2"
               >
                 {editingNotification ? 'Cập nhật' : 'Tạo thông báo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Push Notification Modal */}
+      {showPushModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Gửi Push Notification</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tiêu đề *
+                </label>
+                <input
+                  type="text"
+                  value={pushForm.title}
+                  onChange={(e) => setPushForm(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Nhập tiêu đề thông báo"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nội dung *
+                </label>
+                <textarea
+                  value={pushForm.message}
+                  onChange={(e) => setPushForm(prev => ({ ...prev, message: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Nhập nội dung thông báo"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Loại thông báo
+                </label>
+                <select
+                  value={pushForm.type}
+                  onChange={(e) => setPushForm(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="special_announcement">Thông báo đặc biệt</option>
+                  <option value="shop_status">Trạng thái cửa hàng</option>
+                  <option value="marketing">Marketing</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL (tùy chọn)
+                </label>
+                <input
+                  type="text"
+                  value={pushForm.url}
+                  onChange={(e) => setPushForm(prev => ({ ...prev, url: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowPushModal(false)}
+                disabled={pushSending}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSendPushNotification}
+                disabled={pushSending}
+                className="btn-primary px-6 py-2 flex items-center"
+              >
+                {pushSending ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Đang gửi...
+                  </>
+                ) : (
+                  <>
+                    <FaBell className="mr-2" />
+                    Gửi thông báo
+                  </>
+                )}
               </button>
             </div>
           </div>

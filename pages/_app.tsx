@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import { CartProvider } from '../lib/context/CartContext'
 import { AuthProvider } from '../lib/context/AuthContext'
 import { ShopStatusProvider, useShopStatus } from '../lib/context/ShopStatusContext'
+import { PushNotificationProvider } from '../lib/context/PushNotificationContext'
 import ShopStatusOverlay from '../components/ShopStatusOverlay'
 import { StoreInfoProvider } from '../lib/context/StoreInfoContext'
 
@@ -18,21 +19,23 @@ const RootApp = (props: AppProps) => {
     <AuthProvider>
       <CartProvider>
         <ShopStatusProvider>
-          <StoreInfoProvider>
-            <AppContent {...props} />
-            <ShopStatusOverlay />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-          </StoreInfoProvider>
+          <PushNotificationProvider>
+            <StoreInfoProvider>
+              <AppContent {...props} />
+              <ShopStatusOverlay />
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+            </StoreInfoProvider>
+          </PushNotificationProvider>
         </ShopStatusProvider>
       </CartProvider>
     </AuthProvider>

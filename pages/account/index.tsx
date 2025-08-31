@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../lib/context/AuthContext';
+import PushNotificationToggle from '../../components/PushNotificationToggle';
 
 const AccountProfile: NextPage = () => {
   const router = useRouter();
@@ -314,6 +315,25 @@ const AccountProfile: NextPage = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Notification Preferences */}
+            <div className="mt-6 bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold mb-6 flex items-center">
+                <FaUser className="mr-2 text-primary-600" /> 
+                Cài đặt thông báo
+              </h2>
+              
+              <div className="space-y-4">
+                <p className="text-gray-600 mb-4">
+                  Quản lý cách bạn nhận thông báo về đơn hàng, trạng thái cửa hàng và ưu đãi đặc biệt.
+                </p>
+                
+                <PushNotificationToggle 
+                  variant="card"
+                  className="w-full"
+                />
+              </div>
             </div>
 
             {/* Quick Actions */}
